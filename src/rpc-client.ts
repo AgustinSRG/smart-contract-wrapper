@@ -124,6 +124,16 @@ export class Web3RPCClient {
     }
 
     /**
+     * Gets the current gas price in wei
+     * @param options RPC options
+     * @returns The gas price
+     */
+    public async gasPrice(options: RPCOptions): Promise<bigint> {
+        const result = await this.rpcRequest("eth_gasPrice", [], options);
+        return parseQuantity(result);
+    }
+
+    /**
      * Get transaction count (for next nonce)
      * @param address Address (0x...)
      * @param tag Tag that can be latest=last block or pending=last pending transaction
