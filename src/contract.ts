@@ -104,6 +104,7 @@ export class SmartContractInterface {
         const receipt = await sendTransaction(this.address, txDataHexString, 0, { ...options, ...this.rpcOptions });
         return {
             receipt: receipt,
+            result: null,
         };
     }
 
@@ -121,6 +122,7 @@ export class SmartContractInterface {
         const receipt = await sendTransaction(this.address, txDataHexString, value, { ...options, ...this.rpcOptions });
         return {
             receipt: receipt,
+            result: null,
         };
     }
 
@@ -253,5 +255,5 @@ export interface TransactionResult<Type> {
     /**
      * Result
      */
-    result?: Type;
+    result: Type;
 }
