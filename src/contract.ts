@@ -2,12 +2,13 @@
 
 "use strict"
 
-import { RPCOptions, TransactionReceipt, Web3RPCClient } from "./rpc-client";
+import { RPCOptions, TransactionLog, TransactionReceipt, Web3RPCClient } from "./rpc-client";
 import { DataLike, parseHexBytes, QuantityLike } from "./utils";
-import { Interface, Fragment, JsonFragment, Result } from "@ethersproject/abi";
+import { Interface, JsonFragment, Result } from "@ethersproject/abi";
 import { sendTransaction, TransactionSendingOptions } from "./tx";
+import { interpretLog, SmartContractEvent } from "./events";
 
-export type ABILike = string | ReadonlyArray<Fragment | JsonFragment | string>;
+export type ABILike = ReadonlyArray<JsonFragment>;
 
 /**
  * Deploys smart contract
@@ -49,6 +50,11 @@ export class SmartContractInterface {
     public rpcOptions: RPCOptions;
 
     /**
+     * Contract ABI
+     */
+    public abi: ABILike;
+
+    /**
      * Contract interface for ABI encoding
      */
     protected contractInterface: Interface;
@@ -61,6 +67,7 @@ export class SmartContractInterface {
     constructor(address: DataLike, abi: ABILike, rpcOptions: RPCOptions) {
         this.address = parseHexBytes(address);
         this.rpcOptions = rpcOptions;
+        this.abi = abi;
         this.contractInterface = new Interface(abi);
     }
 
@@ -115,6 +122,38 @@ export class SmartContractInterface {
         return {
             receipt: receipt,
         };
+    }
+
+    /**
+     * Parses transaction logs
+     * @param logs Transaction logs
+     * @returns The smart contract events
+     */
+    public parseTransactionLogs(logs: TransactionLog[]): SmartContractEvent[] {
+        const events: SmartContractEvent[] = [];
+        for (const log of logs) {
+            const event = interpretLog(log, this.abi);
+            if (event) {
+                events.push(event);
+            }
+        }
+        return events;
+    }
+
+    /**
+     * Finds event in transaction receipt
+     * @param receipt Transaction recept
+     * @param name Event name
+     * @returns The event, or null if not found
+     */
+    public findEvent(receipt: TransactionReceipt, name: string): SmartContractEvent {
+        const events = this.parseTransactionLogs(receipt.logs);
+        for (const event of events) {
+            if (event.name === name) {
+                return event;
+            }
+        }
+        return null;
     }
 }
 
@@ -202,7 +241,17 @@ export interface MethodTransactionOptions {
     logFunction?: (msg: string) => void;
 }
 
+/**
+ * Transaction result
+ */
 export interface TransactionResult<Type> {
+    /**
+     * Transaction receipt
+     */
     receipt: TransactionReceipt;
+
+    /**
+     * Result
+     */
     result?: Type;
 }
