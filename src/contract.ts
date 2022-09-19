@@ -10,35 +10,34 @@ import { sendTransaction, TransactionSendingOptions } from "./tx";
 export type ABILike = string | ReadonlyArray<Fragment | JsonFragment | string>;
 
 /**
+ * Deploys smart contract
+ * @param byteCode The byte code of the smart contract
+ * @param abi The ABI definition of the smart contract
+ * @param constructorParams The constructor params
+ * @param value The value to send to the constructor (wei)
+ * @param options The transaction options (including RPC options)
+ * @returns A result with the transaction receipt and the contract address
+*/
+export async function deploySmartContract(byteCode: DataLike, abi: ABILike, constructorParams: any[], value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionResult<Buffer>> {
+    const contractInterface = new Interface(abi);
+
+    const byteCodeBuf = parseHexBytes(byteCode);
+    const deployEncoded = parseHexBytes(contractInterface.encodeDeploy(constructorParams));
+
+    const txData = Buffer.concat([byteCodeBuf, deployEncoded]);
+
+    const receipt = await sendTransaction(null, txData, value, options);
+
+    return {
+        receipt: receipt,
+        result: receipt.contractAddress,
+    };
+}
+
+/**
  * Provides an interface for smart contract interaction
  */
 export class SmartContractInterface {
-
-    /**
-     * Deploys smart contract
-     * @param byteCode The byte code of the smart contract
-     * @param abi The ABI definition of the smart contract
-     * @param constructorParams The constructor params
-     * @param value The value to send to the constructor (wei)
-     * @param options The transaction options (including RPC options)
-     * @returns A result with the transaction receipt and the contract address
-     */
-    public static async deploy(byteCode: DataLike, abi: ABILike, constructorParams: any[], value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionResult<Buffer>> {
-        const contractInterface = new Interface(abi);
-
-        const byteCodeBuf = parseHexBytes(byteCode);
-        const deployEncoded = parseHexBytes(contractInterface.encodeDeploy(constructorParams));
-
-        const txData = Buffer.concat([byteCodeBuf, deployEncoded]);
-
-        const receipt = await sendTransaction(null, txData, value, options);
-
-        return {
-            receipt: receipt,
-            result: receipt.contractAddress,
-        };
-    }
-
     /**
      * Address of the smart contract
      */
