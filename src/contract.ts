@@ -2,13 +2,12 @@
 
 "use strict"
 
-import { RPCOptions, TransactionLog, TransactionReceipt, Web3RPCClient } from "./rpc-client";
-import { DataLike, encodeBuffersToHex, normalizeABIResult, parseHexBytes, QuantityLike, toHex } from "./utils";
-import { Interface, JsonFragment, Result } from "@ethersproject/abi";
-import { sendTransaction, TransactionSendingOptions } from "./tx";
-import { interpretLog, SmartContractEvent } from "./events";
-
-export type ABILike = ReadonlyArray<JsonFragment>;
+import { Web3RPCClient } from "./rpc-client";
+import { normalizeABIResult, parseAddress, parseBytes } from "./utils";
+import { Interface } from "@ethersproject/abi";
+import { sendTransaction } from "./tx";
+import { interpretLog } from "./events";
+import { ABILike, Address, AddressLike, BytesLike, InputABIParams, MethodCallingOptions, MethodTransactionOptions, OutputABIParams, QuantityLike, RPCOptions, SmartContractEvent, TransactionLog, TransactionReceipt, TransactionResult, TransactionSendingOptions } from "./types";
 
 /**
  * Deploys smart contract
@@ -19,11 +18,11 @@ export type ABILike = ReadonlyArray<JsonFragment>;
  * @param options The transaction options (including RPC options)
  * @returns A result with the transaction receipt and the contract address
 */
-export async function deploySmartContract(byteCode: DataLike, abi: ABILike, constructorParams: any[], value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionResult<Buffer>> {
+export async function deploySmartContract(byteCode: BytesLike, abi: ABILike, constructorParams: InputABIParams, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionResult<Address>> {
     const contractInterface = new Interface(abi);
 
-    const byteCodeBuf = parseHexBytes(byteCode);
-    const deployEncoded = parseHexBytes(contractInterface.encodeDeploy(constructorParams));
+    const byteCodeBuf = parseBytes(byteCode);
+    const deployEncoded = parseBytes(contractInterface.encodeDeploy(constructorParams));
 
     const txData = Buffer.concat([byteCodeBuf, deployEncoded]);
 
@@ -42,7 +41,7 @@ export class SmartContractInterface {
     /**
      * Address of the smart contract
      */
-    public address: Buffer;
+    public address: Address;
 
     /**
      * RPC options
@@ -64,8 +63,8 @@ export class SmartContractInterface {
      * @param abi Contract ABI
      * @param rpcOptions RPC options
      */
-    constructor(address: DataLike, abi: ABILike, rpcOptions: RPCOptions) {
-        this.address = parseHexBytes(address);
+    constructor(address: AddressLike, abi: ABILike, rpcOptions: RPCOptions) {
+        this.address = parseAddress(address);
         this.rpcOptions = rpcOptions;
         this.abi = abi;
         this.contractInterface = new Interface(abi);
@@ -78,8 +77,8 @@ export class SmartContractInterface {
      * @param options The options for calling the method
      * @returns The decoded method result
      */
-    public async callViewMethod(method: string, params: any[], options: MethodCallingOptions): Promise<Result> {
-        const callDataHexString = this.contractInterface.encodeFunctionData(method, encodeBuffersToHex(params));
+    public async callViewMethod(method: string, params: InputABIParams, options: MethodCallingOptions): Promise<OutputABIParams> {
+        const callDataHexString = this.contractInterface.encodeFunctionData(method, params);
         const result = await Web3RPCClient.getInstance().msgCall({
             to: this.address,
             from: options.from,
@@ -99,8 +98,8 @@ export class SmartContractInterface {
      * @param options The options for sending the transaction
      * @returns The transaction receipt
      */
-    public async callMutableMethod(method: string, params: any[], options: MethodTransactionOptions): Promise<TransactionResult<void>> {
-        const txDataHexString = this.contractInterface.encodeFunctionData(method, encodeBuffersToHex(params));
+    public async callMutableMethod(method: string, params: InputABIParams, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
+        const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
         const receipt = await sendTransaction(this.address, txDataHexString, 0, { ...options, ...this.rpcOptions });
         return {
             receipt: receipt,
@@ -117,8 +116,8 @@ export class SmartContractInterface {
      * @param options The options for sending the transaction
      * @returns The transaction receipt
      */
-    public async callPayableMethod(method: string, params: any[], value: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
-        const txDataHexString = this.contractInterface.encodeFunctionData(method, encodeBuffersToHex(params));
+    public async callPayableMethod(method: string, params: InputABIParams, value: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
+        const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
         const receipt = await sendTransaction(this.address, txDataHexString, value, { ...options, ...this.rpcOptions });
         return {
             receipt: receipt,
@@ -157,103 +156,4 @@ export class SmartContractInterface {
         }
         return null;
     }
-}
-
-/**
- * Options for making a method call
- */
-export interface MethodCallingOptions {
-    /**
-     * Address that is calling
-     */
-    from?: DataLike,
-
-    /**
-     * Max gas to use
-     */
-    gas?: QuantityLike;
-
-    /**
-     * Gas price
-     */
-    gasPrice?: QuantityLike;
-
-    /**
-     * Value in wei
-     */
-    value?: QuantityLike;
-}
-
-/**
- * Opntions for sending a method transaction
- */
-export interface MethodTransactionOptions {
-    /**
-     * Private key to sign the transaction
-     */
-    privateKey: DataLike;
-
-    /**
-     * Chain ID
-     */
-    chainId?: QuantityLike;
-
-    /**
-     * Fee market transaction? (to use fee instead of gas price)
-     * True by default
-     */
-    isFeeMarket?: boolean;
-
-    /**
-     * Gas price, by default 0
-     */
-    gasPrice?: QuantityLike;
-
-    /**
-     * The maximum inclusion fee per gas (this fee is given to the miner)
-     */
-    maxPriorityFeePerGas?: QuantityLike;
-
-    /**
-     * The maximum total fee
-     */
-    maxFeePerGas?: QuantityLike;
-
-    /**
-     * Gas limit, by default 6000000
-     */
-    gasLimit?: QuantityLike;
-
-    /**
-     * Timeout in milliseconds to wait for the transaction receipt. Set to 0 for no timeout. By default no tiemout.
-     */
-    receiptWaitTimeout?: number;
-
-    /**
-     * Transaction nonce. 
-     * If not provided:
-     *  - The transactions count is used.
-     *  - In case of collission, the transaction will be retried with a new nonce.
-     */
-    nonce?: QuantityLike;
-
-    /**
-     * Log Function to receive progress messages
-     */
-    logFunction?: (msg: string) => void;
-}
-
-/**
- * Transaction result
- */
-export interface TransactionResult<Type> {
-    /**
-     * Transaction receipt
-     */
-    receipt: TransactionReceipt;
-
-    /**
-     * Result
-     */
-    result: Type;
 }

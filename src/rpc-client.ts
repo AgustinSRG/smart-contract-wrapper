@@ -3,22 +3,8 @@
 "use strict";
 
 import { Request } from "./request";
-import { DataLike, parseHexBytes, parseQuantity, QuantityLike, toHex } from "./utils";
-
-/**
- * RPC request options
- */
-export interface RPCOptions {
-    /**
-     * RPC URL. Example: http://localhost:8545
-     */
-    rpcURL: string;
-
-    /**
-     * Request timeout in milliseconds
-     */
-    timeout?: number;
-}
+import { AddressLike, BlockData, Bytes, BytesLike, MessageCallOptions, Quantity, RPCOptions, TransactionReceipt } from "./types";
+import { parseAddress, parseBytes, parseQuantity, toHex } from "./utils";
 
 /**
  * Minimal version of Web3 RPC client
@@ -93,25 +79,25 @@ export class Web3RPCClient {
         return {
             number: parseQuantity(result.number),
 
-            hash: parseHexBytes(result.hash),
-            parentHash: parseHexBytes(result.parentHash),
-            nonce: parseHexBytes(result.nonce),
+            hash: parseBytes(result.hash),
+            parentHash: parseBytes(result.parentHash),
+            nonce: parseBytes(result.nonce),
 
-            sha3Uncles: parseHexBytes(result.sha3Uncles),
-            logsBloom: parseHexBytes(result.logsBloom),
+            sha3Uncles: parseBytes(result.sha3Uncles),
+            logsBloom: parseBytes(result.logsBloom),
 
-            transactionsRoot: parseHexBytes(result.transactionsRoot),
+            transactionsRoot: parseBytes(result.transactionsRoot),
 
-            stateRoot: parseHexBytes(result.stateRoot),
+            stateRoot: parseBytes(result.stateRoot),
 
-            receiptsRoot: parseHexBytes(result.receiptsRoot),
+            receiptsRoot: parseBytes(result.receiptsRoot),
 
-            miner: parseHexBytes(result.miner),
+            miner: parseBytes(result.miner),
 
             difficulty: parseQuantity(result.difficulty),
             totalDifficulty: parseQuantity(result.totalDifficulty),
 
-            extraData: parseHexBytes(result.extraData),
+            extraData: parseBytes(result.extraData),
 
             size: parseQuantity(result.size),
 
@@ -129,9 +115,9 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The network ID
      */
-    public async getNetworkId(options: RPCOptions): Promise<bigint> {
+    public async getNetworkId(options: RPCOptions): Promise<Quantity> {
         const result = await this.rpcRequest("net_version", [], options);
-        return BigInt(result);
+        return parseQuantity(result);
     }
 
     /**
@@ -139,7 +125,7 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The gas price
      */
-    public async gasPrice(options: RPCOptions): Promise<bigint> {
+    public async gasPrice(options: RPCOptions): Promise<Quantity> {
         const result = await this.rpcRequest("eth_gasPrice", [], options);
         return parseQuantity(result);
     }
@@ -151,7 +137,7 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The transaction count
      */
-    public async getTransactionCount(address: DataLike, tag: "latest" | "pending", options: RPCOptions): Promise<bigint> {
+    public async getTransactionCount(address: AddressLike, tag: "latest" | "pending", options: RPCOptions): Promise<Quantity> {
         const result = await this.rpcRequest("eth_getTransactionCount", [toHex(address), tag], options);
         return parseQuantity(result);
     }
@@ -163,7 +149,7 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The account balance
      */
-    public async getBalance(address: DataLike, tag: "latest" | "pending", options: RPCOptions): Promise<bigint> {
+    public async getBalance(address: AddressLike, tag: "latest" | "pending", options: RPCOptions): Promise<Quantity> {
         const result = await this.rpcRequest("eth_getBalance", [toHex(address), tag], options);
         return parseQuantity(result);
     }
@@ -175,7 +161,7 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The results (ABI encoded)
      */
-    public async msgCall(callOptions: MessageCallOptions, tag: "latest" | "pending", options: RPCOptions): Promise<Buffer> {
+    public async msgCall(callOptions: MessageCallOptions, tag: "latest" | "pending", options: RPCOptions): Promise<Bytes> {
         const result = await this.rpcRequest("eth_call", [{
             from: toHex(callOptions.from),
             to: toHex(callOptions.to),
@@ -184,7 +170,7 @@ export class Web3RPCClient {
             value: toHex(callOptions.value),
             data: toHex(callOptions.data),
         }, tag], options);
-        return parseHexBytes(result);
+        return parseBytes(result);
     }
 
     /**
@@ -193,9 +179,9 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The transaction hash
      */
-    public async sendRawTransaction(txData: DataLike, options: RPCOptions): Promise<Buffer> {
+    public async sendRawTransaction(txData: BytesLike, options: RPCOptions): Promise<Bytes> {
         const result = await this.rpcRequest("eth_sendRawTransaction", [toHex(txData)], options);
-        return parseHexBytes(result);
+        return parseBytes(result);
     }
 
     /**
@@ -204,7 +190,7 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The transaction receipt, or null if the transaction is not mined yet
      */
-    public async getTransactionReceipt(txHash: DataLike, options: RPCOptions): Promise<TransactionReceipt> {
+    public async getTransactionReceipt(txHash: BytesLike, options: RPCOptions): Promise<TransactionReceipt> {
         const result = await this.rpcRequest("eth_getTransactionReceipt", [toHex(txHash)], options);
 
         if (!result) {
@@ -212,20 +198,20 @@ export class Web3RPCClient {
         }
 
         return {
-            transactionHash: parseHexBytes(result.transactionHash),
+            transactionHash: parseBytes(result.transactionHash),
 
             transactionIndex: parseQuantity(result.transactionIndex),
 
-            blockHash: parseHexBytes(result.blockHash),
+            blockHash: parseBytes(result.blockHash),
             blockNumber: parseQuantity(result.blockNumber),
 
-            from: parseHexBytes(result.from),
-            to: parseHexBytes(result.to),
+            from: parseBytes(result.from),
+            to: parseBytes(result.to),
 
             cumulativeGasUsed: parseQuantity(result.cumulativeGasUsed),
             gasUsed: parseQuantity(result.gasUsed),
 
-            contractAddress: parseHexBytes(result.contractAddress),
+            contractAddress: parseAddress(result.contractAddress),
 
             logs: forceArray(result.logs).map(l => {
                 if (!l || typeof l !== "object") {
@@ -235,109 +221,24 @@ export class Web3RPCClient {
                     removed: !!l.removed,
                     logIndex: parseQuantity(l.logIndex),
                     transactionIndex: parseQuantity(l.transactionIndex),
-                    transactionHash: parseHexBytes(l.transactionHash),
-                    blockHash: parseHexBytes(l.blockHash),
+                    transactionHash: parseBytes(l.transactionHash),
+                    blockHash: parseBytes(l.blockHash),
                     blockNumber: parseQuantity(l.blockNumber),
-                    address: parseHexBytes(l.address),
-                    data: parseHexBytes(l.data),
+                    address: parseAddress(l.address),
+                    data: parseBytes(l.data),
                     topics: forceArray(l.topics).map(t => {
-                        return parseHexBytes(t);
+                        return parseBytes(t);
                     }),
                 };
             }),
 
-            logsBloom: parseHexBytes(result.logsBloom),
+            logsBloom: parseBytes(result.logsBloom),
 
-            root: parseHexBytes(result.root),
+            root: parseBytes(result.root),
 
             status: parseQuantity(result.status),
         };
     }
-}
-
-/**
- * Block data
- * https://ethereum.org/es/developers/docs/apis/json-rpc/#eth_getblockbyhash
- */
-export interface BlockData {
-    number: bigint;
-
-    hash: Buffer,
-    parentHash: Buffer,
-    nonce: Buffer,
-
-    sha3Uncles: Buffer,
-    logsBloom: Buffer,
-
-    transactionsRoot: Buffer,
-
-    stateRoot: Buffer;
-
-    receiptsRoot: Buffer;
-
-    miner: Buffer;
-
-    difficulty: bigint,
-    totalDifficulty: bigint;
-
-    extraData: Buffer,
-
-    size: bigint,
-
-    gasLimit: bigint,
-    gasUsed: bigint,
-    baseFeePerGas: bigint,
-
-    timestamp: bigint,
-}
-
-/**
- * Options for message call
- * https://ethereum.org/es/developers/docs/apis/json-rpc/#eth_call
- */
-export interface MessageCallOptions {
-    from?: DataLike;
-    to: DataLike;
-    gas?: QuantityLike;
-    gasPrice?: QuantityLike;
-    value?: QuantityLike;
-    data: DataLike;
-}
-
-/**
- * Transaction receipt
- * https://ethereum.org/es/developers/docs/apis/json-rpc/#eth_gettransactionreceipt
- */
-export interface TransactionReceipt {
-    transactionHash: Buffer;
-    transactionIndex: bigint;
-    blockHash: Buffer;
-    blockNumber: bigint;
-    from: Buffer;
-    to: Buffer;
-    cumulativeGasUsed: bigint;
-    gasUsed: bigint;
-    contractAddress: Buffer;
-    logs: TransactionLog[];
-    logsBloom: Buffer;
-    root: Buffer;
-    status: bigint;
-}
-
-/**
- * Transaction Log
- * https://ethereum.org/es/developers/docs/apis/json-rpc/#eth_getfilterchanges
- */
-export interface TransactionLog {
-    removed: boolean;
-    logIndex: bigint;
-    transactionIndex: bigint;
-    transactionHash: Buffer;
-    blockHash: Buffer;
-    blockNumber: bigint;
-    address: Buffer;
-    data: Buffer;
-    topics: Buffer[];
 }
 
 function forceArray(arr: any): any[] {

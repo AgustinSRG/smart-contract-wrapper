@@ -3,15 +3,15 @@
 "use strict";
 
 import { expect } from 'chai';
-import { parseHexBytes, parseQuantity, privateKeyToAddress, SmartContractEvent, toHex } from '../src';
+import { outputToAddress, outputToQuantity, parseAddress, parseBytes, parseQuantity, privateKeyToAddress, SmartContractEvent, toHex } from '../src';
 import { ERC20Contract } from "./utils/erc20"
 
 const RPC_URL = "http://localhost:8545"
 
-const TEST_PRIVATE_KEY = parseHexBytes("3de106f01f3fa595f215f50a0daf2ddd1bd061663b69396783a70dcee9f1f755");
+const TEST_PRIVATE_KEY = parseBytes("3de106f01f3fa595f215f50a0daf2ddd1bd061663b69396783a70dcee9f1f755");
 const TEST_ADDRESS = privateKeyToAddress(TEST_PRIVATE_KEY);
 
-const TEST_ADDRESS_1 = parseHexBytes("0x64eBC0159b5FDCEe8EE623DCc7bF8D296F17826B");
+const TEST_ADDRESS_1 = parseAddress("0x64eBC0159b5FDCEe8EE623DCc7bF8D296F17826B");
 
 const TEST_INITIAL_SUPPLY = parseQuantity(1000);
 const TEST_TOKEN_NAME = "TestToken";
@@ -67,9 +67,12 @@ describe("Smart contract wrapper", function () {
     it('Should emit the Transfer event', () => {
         expect(event).not.to.be.null;
         expect(event.name).to.be.equal("Transfer");
-        expect(toHex(event.parameters.from)).to.be.equal(toHex(TEST_ADDRESS));
-        expect(toHex(event.parameters.to)).to.be.equal(toHex(TEST_ADDRESS_1));
-        expect(parseQuantity(event.parameters.value)).to.be.equal(BigInt(1));
+
+
+
+        expect(outputToAddress(event.parameters[0]).toUpperCase()).to.be.equal(TEST_ADDRESS.toUpperCase());
+        expect(outputToAddress(event.parameters[1]).toUpperCase()).to.be.equal(TEST_ADDRESS_1.toUpperCase());
+        expect(outputToQuantity(event.parameters[2])).to.be.equal(BigInt(1));
     });
 
     it('Should have incremented the balance of the test address', async () => {

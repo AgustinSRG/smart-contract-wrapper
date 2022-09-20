@@ -4,68 +4,10 @@
 
 import { FeeMarketEIP1559TxData, FeeMarketEIP1559Transaction, TxData, Transaction } from '@ethereumjs/tx';
 import { Common } from '@ethereumjs/common';
-import { RPCOptions, TransactionReceipt, Web3RPCClient } from './rpc-client';
-import { DataLike, parseHexBytes, parseQuantity, QuantityLike, toHex } from './utils';
+import { Web3RPCClient } from './rpc-client';
+import { parseAddress, parseBytes, parseQuantity, toHex } from './utils';
 import { privateKeyToAddress } from './account';
-
-/**
- * Transaction sending options
- */
-export interface TransactionSendingOptions extends RPCOptions {
-    /**
-     * Private key to sign the transaction
-     */
-    privateKey: DataLike;
-
-    /**
-     * Chain ID
-     */
-    chainId?: QuantityLike;
-
-    /**
-     * Fee market transaction? (to use fee instead of gas price)
-     * True by default
-     */
-    isFeeMarket?: boolean;
-
-    /**
-     * Gas price, by default 0
-     */
-    gasPrice?: QuantityLike;
-
-    /**
-     * The maximum inclusion fee per gas (this fee is given to the miner)
-     */
-    maxPriorityFeePerGas?: QuantityLike;
-
-    /**
-     * The maximum total fee
-     */
-    maxFeePerGas?: QuantityLike;
-
-    /**
-     * Gas limit, by default 6000000
-     */
-    gasLimit?: QuantityLike;
-
-    /**
-     * Timeout in milliseconds to wait for the transaction receipt. Set to 0 for no timeout. By default no tiemout.
-     */
-    receiptWaitTimeout?: number;
-
-    /**
-     * Transaction nonce. 
-     * If not provided:
-     *  - The transactions count is used.
-     *  - In case of collission, the transaction will be retried with a new nonce.
-     */
-    nonce?: QuantityLike;
-
-    /**
-     * Log Function to receive progress messages
-     */
-    logFunction?: (msg: string) => void;
-}
+import { AddressLike, BytesLike, QuantityLike, TransactionReceipt, TransactionSendingOptions } from './types';
 
 const NonceCollisionErrorMessages = [
     "nonce too low",
@@ -80,7 +22,7 @@ const NonceCollisionErrorMessages = [
  * @param options RPC options
  * @returns The transaction receipt
  */
-export async function sendTransaction(to: DataLike, data: DataLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
+export async function sendTransaction(to: AddressLike, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
     let receipt: TransactionReceipt;
     while (!receipt) {
         try {
@@ -112,11 +54,9 @@ export async function sendTransaction(to: DataLike, data: DataLike, value: Quant
 
         return receipt;
     }
-    
 }
 
-
-async function sendFeeMarketTransaction(to: DataLike, data: DataLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
+async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
     let chainId = options.chainId;
 
     if (chainId === undefined) {
@@ -135,7 +75,7 @@ async function sendFeeMarketTransaction(to: DataLike, data: DataLike, value: Qua
         }
     );
 
-    const privateKey = parseHexBytes(options.privateKey);
+    const privateKey = parseBytes(options.privateKey);
     const accountAddress = privateKeyToAddress(privateKey);
 
     let recommendedMaxPriorityFeePerGas = BigInt(0);
@@ -180,7 +120,7 @@ async function sendFeeMarketTransaction(to: DataLike, data: DataLike, value: Qua
     };
 
     if (to) {
-        txData.to = toHex(to);
+        txData.to = parseAddress(to);
     }
 
     if (data) {
@@ -209,7 +149,7 @@ async function sendFeeMarketTransaction(to: DataLike, data: DataLike, value: Qua
     return sendSerializedTransaction(serializedTx, options);
 }
 
-async function sendGasPriceTransaction(to: DataLike, data: DataLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
+async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
     let chainId = options.chainId;
 
     if (chainId === undefined) {
@@ -228,10 +168,10 @@ async function sendGasPriceTransaction(to: DataLike, data: DataLike, value: Quan
         }
     );
 
-    const privateKey = parseHexBytes(options.privateKey);
+    const privateKey = parseBytes(options.privateKey);
     const accountAddress = privateKeyToAddress(privateKey);
 
-    let recommendedGasPrice= BigInt(0);
+    let recommendedGasPrice = BigInt(0);
 
     if (options.gasPrice === undefined) {
         try {
@@ -258,7 +198,6 @@ async function sendGasPriceTransaction(to: DataLike, data: DataLike, value: Quan
         nonceHex = toHex(options.nonce);
     }
 
-
     // Build transaction
 
     const txData: TxData = {
@@ -268,7 +207,7 @@ async function sendGasPriceTransaction(to: DataLike, data: DataLike, value: Quan
     };
 
     if (to) {
-        txData.to = toHex(to);
+        txData.to = parseAddress(to);
     }
 
     if (data) {

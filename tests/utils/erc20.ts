@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { DataLike, deploySmartContract, MethodTransactionOptions, parseHexBytes, parseQuantity, QuantityLike, RPCOptions, SmartContractEvent, SmartContractInterface, TransactionResult, TransactionSendingOptions } from "../../src/index";
+import { AddressLike, deploySmartContract, MethodTransactionOptions, outputToQuantity, outputToString, parseQuantity, Quantity, QuantityLike, RPCOptions, SmartContractEvent, SmartContractInterface, TransactionResult, TransactionSendingOptions } from "../../src/index";
 import { ERC20_ABI, ERC20_BYTECODE } from "./erc20-data";
 
 export class ERC20Contract {
@@ -18,37 +18,37 @@ export class ERC20Contract {
         }
     }
 
-    constructor(address: DataLike, rpcOptions: RPCOptions) {
+    constructor(address: AddressLike, rpcOptions: RPCOptions) {
         this._contractInterface = new SmartContractInterface(address, ERC20_ABI, rpcOptions);
     }
 
-    public async balanceOf(address: DataLike): Promise<bigint> {
-        const result = await this._contractInterface.callViewMethod("balanceOf", [parseHexBytes(address)], {});
-        return parseQuantity(result[0]);
+    public async balanceOf(address: AddressLike): Promise<Quantity> {
+        const result = await this._contractInterface.callViewMethod("balanceOf", [address], {});
+        return outputToQuantity(result[0]);
     }
 
     public async symbol(): Promise<string> {
         const result = await this._contractInterface.callViewMethod("symbol", [], {});
-        return "" + result[0];
+        return outputToString(result[0]);
     }
 
     public async name(): Promise<string> {
         const result = await this._contractInterface.callViewMethod("name", [], {});
-        return "" + result[0];
+        return outputToString(result[0]);
     }
 
-    public async decimals(): Promise<bigint> {
+    public async decimals(): Promise<Quantity> {
         const result = await this._contractInterface.callViewMethod("decimals", [], {});
-        return parseQuantity(result[0]);
+        return outputToQuantity(result[0]);
     }
 
-    public async totalSupply(): Promise<bigint> {
+    public async totalSupply(): Promise<Quantity> {
         const result = await this._contractInterface.callViewMethod("totalSupply", [], {});
-        return parseQuantity(result[0]);
+        return outputToQuantity(result[0]);
     }
 
-    public async transfer(address: DataLike, amount: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<SmartContractEvent>> {
-        const result = await this._contractInterface.callMutableMethod("transfer", [parseHexBytes(address), parseQuantity(amount)], options);
+    public async transfer(address: AddressLike, amount: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<SmartContractEvent>> {
+        const result = await this._contractInterface.callMutableMethod("transfer", [address, amount], options);
 
         if (result.receipt.status > BigInt(0)) {
             const transferEvent = this._contractInterface.findEvent(result.receipt, "Transfer");

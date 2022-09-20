@@ -3,31 +3,10 @@
 "use strict"
 
 import { JsonFragment } from "@ethersproject/abi";
-import { ABILike } from "./contract";
-import { TransactionLog } from "./rpc-client";
 import { keccak256 } from 'ethereum-cryptography/keccak';
-import { Interface, EventFragment } from "@ethersproject/abi";
+import { Interface } from "@ethersproject/abi";
 import { normalizeABIResult, toHex } from "./utils";
-
-/**
- * Smart contract event
- */
-export interface SmartContractEvent {
-    /**
-     * Name of the event
-     */
-    name: string;
-
-    /**
-     * Signature of the event
-     */
-    signature: string;
-
-    /**
-     * Parameters
-     */
-    parameters: { [key: string]: any }
-}
+import { ABILike, SmartContractEvent, TransactionLog } from "./types";
 
 /**
  * Interprets transaction log

@@ -2,6 +2,7 @@
 
 "use strict";
 
+export * from "./types";
 export * from "./utils";
 export * from "./account";
 export * from "./rpc-client";
