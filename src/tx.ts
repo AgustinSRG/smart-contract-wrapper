@@ -120,7 +120,7 @@ async function sendFeeMarketTransaction(to: DataLike, data: DataLike, value: Qua
     let chainId = options.chainId;
 
     if (chainId === undefined) {
-        chainId = await Web3RPCClient.getInstance().getNetworkID(options);
+        chainId = await Web3RPCClient.getInstance().getNetworkId(options);
     }
 
     const customCommon = Common.custom(
@@ -174,21 +174,21 @@ async function sendFeeMarketTransaction(to: DataLike, data: DataLike, value: Qua
     const txData: FeeMarketEIP1559TxData = {
         nonce: nonceHex,
         gasLimit: gasLimitHex,
-        chainId: chainId,
+        chainId: toHex(chainId),
         maxFeePerGas: maxFeePerGas,
         maxPriorityFeePerGas: maxPriorityFeePerGas,
     };
 
     if (to) {
-        txData.to = to;
+        txData.to = toHex(to);
     }
 
     if (data) {
-        txData.data = data;
+        txData.data = toHex(data);
     }
 
     if (value) {
-        txData.value = value;
+        txData.value = toHex(value);
     }
 
     if (options.logFunction) {
@@ -213,7 +213,7 @@ async function sendGasPriceTransaction(to: DataLike, data: DataLike, value: Quan
     let chainId = options.chainId;
 
     if (chainId === undefined) {
-        chainId = await Web3RPCClient.getInstance().getNetworkID(options);
+        chainId = await Web3RPCClient.getInstance().getNetworkId(options);
     }
 
     const customCommon = Common.custom(
@@ -268,15 +268,15 @@ async function sendGasPriceTransaction(to: DataLike, data: DataLike, value: Quan
     };
 
     if (to) {
-        txData.to = to;
+        txData.to = toHex(to);
     }
 
     if (data) {
-        txData.data = data;
+        txData.data = toHex(data);
     }
 
     if (value) {
-        txData.value = value;
+        txData.value = toHex(value);
     }
 
     if (options.logFunction) {

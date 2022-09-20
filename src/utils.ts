@@ -2,8 +2,15 @@
 
 "use strict"
 
+import { Result } from "@ethersproject/abi";
+
+export interface BigNumber {
+    _isBigNumber: true;
+    _hex: string;
+}
+
 export type DataLike = string | Buffer;
-export type QuantityLike = string | number | bigint;
+export type QuantityLike = string | number | bigint | BigNumber;
 
 /**
  * Parses quantity from RPC result
@@ -17,6 +24,8 @@ export function parseQuantity(q: QuantityLike): bigint {
         return BigInt(hexWithPrefix(q));
     } else if (typeof q === "bigint") {
         return q;
+    } else if (typeof q === "object" && q !== null && q._isBigNumber) {
+        return BigInt(hexWithPrefix(q._hex));
     } else {
         return BigInt(0);
     }
@@ -51,6 +60,8 @@ export function toHex(b: QuantityLike | DataLike): string {
         return hexWithPrefix(b);
     } else if (b instanceof Buffer) {
         return hexWithPrefix(b.toString("hex"));
+    } else if (typeof b === "object" && b !== null && b._isBigNumber) {
+        return hexWithPrefix(b._hex);
     } else {
         return undefined;
     }
@@ -84,4 +95,48 @@ export function hexNoPrefix(hex: string) {
     } else {
         return hex.substr(2);
     }
+}
+
+/**
+ * Encodes buffers to hex string for ABI encoder
+ * @param arr Array or values
+ * @returns Encoded array of values
+ */
+export function encodeBuffersToHex(arr: any[]): any[] {
+    return arr.map(a => {
+        if (a instanceof Buffer) {
+            return toHex(a);
+        } else if (Array.isArray(a)) {
+            return encodeBuffersToHex(a);
+        } else {
+            return a;
+        }
+    });
+}
+
+/**
+ * Normalizes ABI result
+ * @param i Regular ABI result
+ * @returns Normalized ABI result
+ */
+export function normalizeABIResult(i: Result): Result {
+    const r = Object.create(null);
+
+    for (let p of Object.keys(i)) {
+        const a = i[p];
+
+        let b: any;
+
+        if (typeof a === "object" && a !== null && a._isBigNumber) {
+            b = parseQuantity(a._hex);
+        } else if (Array.isArray(a)) {
+            b = normalizeABIResult(a);
+        } else {
+            b = a;
+        }
+
+        r[p] = b;
+    }
+
+    return r;
 }

@@ -7,7 +7,7 @@ import { ABILike } from "./contract";
 import { TransactionLog } from "./rpc-client";
 import { keccak256 } from 'ethereum-cryptography/keccak';
 import { Interface, EventFragment } from "@ethersproject/abi";
-import { toHex } from "./utils";
+import { normalizeABIResult, toHex } from "./utils";
 
 /**
  * Smart contract event
@@ -63,11 +63,11 @@ export function interpretLog(log: TransactionLog, abi: ABILike): SmartContractEv
 
     const contractInterface = new Interface(abi);
 
-    const data = contractInterface.decodeEventLog(<EventFragment>eventEntry, log.data, log.topics.map(l => toHex(l)));
+    const data = contractInterface.decodeEventLog(eventEntry.name, log.data, log.topics.map(l => toHex(l)));
 
     return {
         name: eventEntry.name,
         signature: eventSignature,
-        parameters: data,
+        parameters: normalizeABIResult(data),
     };
 }

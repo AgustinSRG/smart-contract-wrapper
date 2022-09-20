@@ -129,9 +129,9 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The network ID
      */
-    public async getNetworkID(options: RPCOptions): Promise<bigint> {
+    public async getNetworkId(options: RPCOptions): Promise<bigint> {
         const result = await this.rpcRequest("net_version", [], options);
-        return parseQuantity(result);
+        return BigInt(result);
     }
 
     /**

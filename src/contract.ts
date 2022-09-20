@@ -3,7 +3,7 @@
 "use strict"
 
 import { RPCOptions, TransactionLog, TransactionReceipt, Web3RPCClient } from "./rpc-client";
-import { DataLike, parseHexBytes, QuantityLike } from "./utils";
+import { DataLike, encodeBuffersToHex, normalizeABIResult, parseHexBytes, QuantityLike, toHex } from "./utils";
 import { Interface, JsonFragment, Result } from "@ethersproject/abi";
 import { sendTransaction, TransactionSendingOptions } from "./tx";
 import { interpretLog, SmartContractEvent } from "./events";
@@ -79,7 +79,7 @@ export class SmartContractInterface {
      * @returns The decoded method result
      */
     public async callViewMethod(method: string, params: any[], options: MethodCallingOptions): Promise<Result> {
-        const callDataHexString = this.contractInterface.encodeFunctionData(method, params);
+        const callDataHexString = this.contractInterface.encodeFunctionData(method, encodeBuffersToHex(params));
         const result = await Web3RPCClient.getInstance().msgCall({
             to: this.address,
             from: options.from,
@@ -88,7 +88,7 @@ export class SmartContractInterface {
             gasPrice: options.gasPrice,
             value: options.value,
         }, "latest", this.rpcOptions);
-        return this.contractInterface.decodeFunctionResult(method, result);
+        return normalizeABIResult(this.contractInterface.decodeFunctionResult(method, result));
     }
 
     /**
@@ -100,7 +100,7 @@ export class SmartContractInterface {
      * @returns The transaction receipt
      */
     public async callMutableMethod(method: string, params: any[], options: MethodTransactionOptions): Promise<TransactionResult<void>> {
-        const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
+        const txDataHexString = this.contractInterface.encodeFunctionData(method, encodeBuffersToHex(params));
         const receipt = await sendTransaction(this.address, txDataHexString, 0, { ...options, ...this.rpcOptions });
         return {
             receipt: receipt,
@@ -118,7 +118,7 @@ export class SmartContractInterface {
      * @returns The transaction receipt
      */
     public async callPayableMethod(method: string, params: any[], value: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
-        const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
+        const txDataHexString = this.contractInterface.encodeFunctionData(method, encodeBuffersToHex(params));
         const receipt = await sendTransaction(this.address, txDataHexString, value, { ...options, ...this.rpcOptions });
         return {
             receipt: receipt,
@@ -196,7 +196,7 @@ export interface MethodTransactionOptions {
     /**
      * Chain ID
      */
-    chainId: QuantityLike;
+    chainId?: QuantityLike;
 
     /**
      * Fee market transaction? (to use fee instead of gas price)
