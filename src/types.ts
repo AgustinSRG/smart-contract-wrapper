@@ -5,17 +5,17 @@
 import { JsonFragment } from "@ethersproject/abi";
 
 /**
- * Ethereum address
+ * Ethereum address (Hex string with 0x prefix)
  */
 export type Address = string;
 
 /**
- * Number (Integer)
+ * Number (bigint)
  */
 export type Quantity = bigint;
 
 /**
- * Array of bytes
+ * Array of bytes (Buffer)
  */
 export type Bytes = Buffer;
 
