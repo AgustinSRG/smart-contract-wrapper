@@ -1,0 +1,16 @@
+{
+  "name": "smart-contract-wrapper-codegen",
+  "version": "1.0.0",
+  "description": "Tool to generate smart contract wrappers from ABI definition.",
+  "scripts": {
+    "build": "node minify.js"
+  },
+  "author": "AgustinSRG",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@node-minify/clean-css": "^6.2.0",
+    "@node-minify/core": "^6.2.0",
+    "@node-minify/uglify-js": "^6.2.0"
+  }
+}

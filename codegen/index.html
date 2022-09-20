@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code generator for smart-contract-wrapper</title>
+    <meta name="description" content="Tool to generate smart contract wrappers from ABI definition.">
+
+    <link rel="shortcut icon" type="image/ico" href="./favicon.ico" />
+
+    <link rel="stylesheet" href="./css/text-transform.min.css" />
+    <link rel="stylesheet" href="./css/main.min.css" />
+
+    <script type="text/javascript" src="./vendor/vue/vue.min.js" defer></script>
+
+    <script type="text/javascript" src="./js/scw-codegen.min.js" defer></script>
+
+    <script type="text/javascript" src="./js/main.min.js" defer></script>
+
+</head>
+
+<body>
+    <div id="app" class="main-container">
+        <div class="text-transform">
+            <div class="tt-side tt-side-from">
+                <div class="tt-side-header"><span>SMART CONTRACT NAME:</span><input @input="onUpdateInputCode" v-model="contractName" class="tt-input tt-contract-name"></div>
+                <div class="tt-side-body"><textarea class="tt-textarea tt-input" v-model="inputText"
+                        :placeholder="abiPlaceHolder" @input="onUpdateInputCode"></textarea></div>
+            </div>
+            <div class="tt-side tt-side-to">
+                <div class="tt-side-header"><span>WRAPPER CLASS:</span><input v-model="wrapperName" class="tt-input tt-contract-name" readonly="readonly"></div>
+                <div class="tt-side-body"><textarea class="tt-textarea tt-output" readonly="readonly"
+                        v-model="outputText"></textarea></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
