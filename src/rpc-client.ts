@@ -124,6 +124,17 @@ export class Web3RPCClient {
     }
 
     /**
+     * Gets the network ID
+     * This is used by default if the chain ID is not specified
+     * @param options RPC options
+     * @returns The network ID
+     */
+    public async getNetworkID(options: RPCOptions): Promise<bigint> {
+        const result = await this.rpcRequest("net_version", [], options);
+        return parseQuantity(result);
+    }
+
+    /**
      * Gets the current gas price in wei
      * @param options RPC options
      * @returns The gas price

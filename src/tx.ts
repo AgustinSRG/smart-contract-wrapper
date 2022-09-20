@@ -20,7 +20,7 @@ export interface TransactionSendingOptions extends RPCOptions {
     /**
      * Chain ID
      */
-    chainId: QuantityLike;
+    chainId?: QuantityLike;
 
     /**
      * Fee market transaction? (to use fee instead of gas price)
@@ -117,11 +117,17 @@ export async function sendTransaction(to: DataLike, data: DataLike, value: Quant
 
 
 async function sendFeeMarketTransaction(to: DataLike, data: DataLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
+    let chainId = options.chainId;
+
+    if (chainId === undefined) {
+        chainId = await Web3RPCClient.getInstance().getNetworkID(options);
+    }
+
     const customCommon = Common.custom(
         {
             name: 'my-network',
-            networkId: parseQuantity(options.chainId),
-            chainId: parseQuantity(options.chainId),
+            networkId: parseQuantity(chainId),
+            chainId: parseQuantity(chainId),
         },
         {
             baseChain: "mainnet",
@@ -168,7 +174,7 @@ async function sendFeeMarketTransaction(to: DataLike, data: DataLike, value: Qua
     const txData: FeeMarketEIP1559TxData = {
         nonce: nonceHex,
         gasLimit: gasLimitHex,
-        chainId: options.chainId,
+        chainId: chainId,
         maxFeePerGas: maxFeePerGas,
         maxPriorityFeePerGas: maxPriorityFeePerGas,
     };
@@ -204,11 +210,17 @@ async function sendFeeMarketTransaction(to: DataLike, data: DataLike, value: Qua
 }
 
 async function sendGasPriceTransaction(to: DataLike, data: DataLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
+    let chainId = options.chainId;
+
+    if (chainId === undefined) {
+        chainId = await Web3RPCClient.getInstance().getNetworkID(options);
+    }
+
     const customCommon = Common.custom(
         {
             name: 'my-network',
-            networkId: parseQuantity(options.chainId),
-            chainId: parseQuantity(options.chainId),
+            networkId: parseQuantity(chainId),
+            chainId: parseQuantity(chainId),
         },
         {
             baseChain: "mainnet",
