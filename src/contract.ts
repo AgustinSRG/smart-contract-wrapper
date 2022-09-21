@@ -133,7 +133,7 @@ export class SmartContractInterface {
     public parseTransactionLogs(logs: TransactionLog[]): SmartContractEvent[] {
         const events: SmartContractEvent[] = [];
         for (const log of logs) {
-            const event = interpretLog(log, this.abi);
+            const event = interpretLog(log, this.abi, this.contractInterface);
             if (event) {
                 events.push(event);
             }

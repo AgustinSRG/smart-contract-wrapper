@@ -14,7 +14,7 @@ import { ABILike, SmartContractEvent, TransactionLog } from "./types";
  * @param abi Smart contract ABI
  * @returns The smart contract event, or null if it cannot be decoded
  */
-export function interpretLog(log: TransactionLog, abi: ABILike): SmartContractEvent {
+export function interpretLog(log: TransactionLog, abi: ABILike, contractInterface: Interface): SmartContractEvent {
     let eventEntry: JsonFragment;
     let eventSignature: string;
 
@@ -39,8 +39,6 @@ export function interpretLog(log: TransactionLog, abi: ABILike): SmartContractEv
     if (!eventEntry) {
         return null;
     }
-
-    const contractInterface = new Interface(abi);
 
     const data = contractInterface.decodeEventLog(eventEntry.name, log.data, log.topics.map(l => toHex(l)));
 
