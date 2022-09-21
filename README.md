@@ -24,8 +24,8 @@ Using this class you can create a class for a smart contract, implementing the m
 
  - [Library documentation (Auto-generated)](https://agustinsrg.github.io/smart-contract-wrapper/docs)
 
-## Contract interface generator
+## Contract wrapper generator
 
-For automatic generation of a smart contract class, use the following utility:
+For automatic generation of a smart contract wrappers, use the following utility:
 
  - [Smart contract wrapper generator](https://agustinsrg.github.io/smart-contract-wrapper/codegen)
