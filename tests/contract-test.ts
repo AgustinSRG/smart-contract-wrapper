@@ -3,8 +3,9 @@
 "use strict";
 
 import { expect } from 'chai';
-import { outputToAddress, outputToQuantity, parseAddress, parseBytes, parseQuantity, privateKeyToAddress, SmartContractEvent, toHex } from '../src';
-import { ERC20Contract } from "./utils/erc20"
+import { parseAddress, parseBytes, parseQuantity, privateKeyToAddress } from '../src';
+import { ERC20Wrapper, TransferEvent } from "./utils/erc20"
+import { ERC20_BYTECODE } from './utils/erc20-data';
 
 const RPC_URL = "http://localhost:8545"
 
@@ -25,10 +26,10 @@ describe("Smart contract wrapper", function () {
 
     this.timeout(30000);
 
-    let contract: ERC20Contract;
+    let contract: ERC20Wrapper;
 
     it('Should deploy without errors', async () => {
-        contract = await ERC20Contract.deploy(TEST_TOKEN_NAME, TEST_TOKEN_SYMBOL, TEST_INITIAL_SUPPLY, {
+        contract = await ERC20Wrapper.deploy(TEST_TOKEN_NAME, TEST_TOKEN_SYMBOL, TEST_INITIAL_SUPPLY, ERC20_BYTECODE, {
             rpcURL: RPC_URL,
             privateKey: TEST_PRIVATE_KEY,
             isFeeMarket: true,
@@ -52,7 +53,7 @@ describe("Smart contract wrapper", function () {
         expect(bal).to.be.equal(TEST_INITIAL_SUPPLY);
     });
 
-    let event: SmartContractEvent;
+    let event: TransferEvent | null;
 
     it('Should transfer to test address without errors', async () => {
         const res = await contract.transfer(TEST_ADDRESS_1, BigInt(1), {
@@ -61,18 +62,17 @@ describe("Smart contract wrapper", function () {
             logFunction: LOG_FUNC,
         });
 
-        event = res.result;
+        event = res.result.findTransferEvent();
     });
 
     it('Should emit the Transfer event', () => {
         expect(event).not.to.be.null;
-        expect(event.name).to.be.equal("Transfer");
 
-
-
-        expect(outputToAddress(event.parameters[0]).toUpperCase()).to.be.equal(TEST_ADDRESS.toUpperCase());
-        expect(outputToAddress(event.parameters[1]).toUpperCase()).to.be.equal(TEST_ADDRESS_1.toUpperCase());
-        expect(outputToQuantity(event.parameters[2])).to.be.equal(BigInt(1));
+        if (event !== null) {
+            expect(event.from.toUpperCase()).to.be.equal(TEST_ADDRESS.toUpperCase());
+            expect(event.to.toUpperCase()).to.be.equal(TEST_ADDRESS_1.toUpperCase());
+            expect(event.value).to.be.equal(BigInt(1));
+        }
     });
 
     it('Should have incremented the balance of the test address', async () => {
