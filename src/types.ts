@@ -5,6 +5,11 @@
 import { JsonFragment } from "@ethersproject/abi";
 
 /**
+ * Block tag
+ */
+export type BlockTag = "latest" | "earliest" | "pending";
+
+/**
  * Ethereum address (Hex string with 0x prefix)
  */
 export type Address = string;
@@ -90,6 +95,11 @@ export interface SmartContractEvent {
      * Parameters
      */
     parameters: OutputABIParams;
+
+    /**
+     * Reference to the log
+     */
+    log: TransactionLog;
 }
 
 /**
@@ -296,4 +306,45 @@ export interface TransactionResult<Type> {
      * Result
      */
     result: Type;
+}
+
+/**
+ * Options to filter transaction logs
+ */
+export interface TransactionLogFilterOptions {
+    /**
+     * First block of the range
+     */
+    fromBlock?: QuantityLike | BlockTag;
+
+    /**
+     * Last block of the range
+     */
+    toBlock?: QuantityLike | BlockTag;
+
+    /**
+     * Contract address
+     */
+    address?: AddressLike;
+
+    /**
+     * Array of topics to filter by
+     */
+    topics?: BytesLike[];
+}
+
+/**
+ * Wrapper for smart contract events
+ * Wraps the event with the parsed data
+ */
+export interface SmartContractEventWrapper<Type> {
+    /**
+     * Event
+     */
+    event: SmartContractEvent;
+
+    /**
+     * Event data
+     */
+    data: Type;
 }

@@ -46,5 +46,6 @@ export function interpretLog(log: TransactionLog, abi: ABILike, contractInterfac
         name: eventEntry.name,
         signature: eventSignature,
         parameters: normalizeABIResult(data),
+        log: log,
     };
 }
