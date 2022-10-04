@@ -11,6 +11,7 @@ function generateWrappper(className, abi) {
 
         eventFn: [],
         eventStruct: [],
+        eventTypes: [],
     };
 
     var wrapperName = className + "Wrapper";
@@ -28,6 +29,7 @@ function generateWrappper(className, abi) {
                 result.txFn.push(makeTransactionFunction(entry, result, "    ", className));
             }
         } else if (entry.type === "event") {
+            result.eventTypes.push(entry.name);
             result.eventStruct.push(makeEventStruct(entry, result, ""));
             result.eventFn.push(makeEventFunc(entry, result, "    "));
         }
@@ -35,6 +37,8 @@ function generateWrappper(className, abi) {
 
     result.imports["SmartContractInterface"] = true;
     result.imports["AddressLike"] = true;
+    result.imports["QuantityLike"] = true;
+    result.imports["BlockTag"] = true;
     result.imports["RPCOptions"] = true;
     result.imports["ABILike"] = true;
     result.imports["SmartContractEvent"] = true;
@@ -77,7 +81,20 @@ function generateWrappper(className, abi) {
         lines.push(result.txFn[i]);
     }
 
+
+    lines.push('');
+    lines.push('    public async findEvents(fromBlock: QuantityLike | BlockTag, toBlock: QuantityLike | BlockTag): Promise<' + className + 'EventCollection> {');
+    lines.push('        const events = await this._contractInterface.findEvents(fromBlock, toBlock);');
+    lines.push('        return new ' + className + 'EventCollection(events);');
+    lines.push('    }');
+
     lines.push('}');
+
+    lines.push('');
+
+    lines.push('export type ' + className + "EventType = " + (result.eventTypes.map(function (t) {
+      return JSON.stringify(t);  
+    }).join(" | ") || '"string"') + ';');
 
     lines.push('');
 
@@ -87,6 +104,24 @@ function generateWrappper(className, abi) {
 
     lines.push('    constructor(events: SmartContractEvent[]) {');
     lines.push('        this.events = events;');
+    lines.push('    }');
+
+    lines.push('');
+
+    lines.push('    public length(): number {');
+    lines.push('        return this.events.length');
+    lines.push('    }');
+
+    lines.push('');
+
+    lines.push('    public getEventType(index: number): ' + className + 'EventType {');
+    lines.push('        return <any>this.events[index].name');
+    lines.push('    }');
+
+    lines.push('');
+
+    lines.push('    public filter(eventType: ' + className + 'EventType): ' + className + 'EventCollection {');
+    lines.push('        return new ' + className + 'EventCollection(this.events.filter(event => event.name === eventType));');
     lines.push('    }');
 
     for (var i = 0; i < result.eventFn.length; i++) {
@@ -349,26 +384,25 @@ function makeEventStruct(entry, result, tabSpaces) {
 
 function makeEventFunc(entry, result, tabSpaces) {
     var lines = [];
+    
+    result.imports["SmartContractEventWrapper"] = true;
+    result.imports["SmartContractEvent"] = true;
+    lines.push('public get' + entry.name + 'Event(index: number): SmartContractEventWrapper<' + entry.name + 'Event> {');
 
-    lines.push('public find' + entry.name + 'Event(): ' + entry.name + 'Event | null {');
 
-
-    lines.push('    for (let event of this.events) {');
-
-    lines.push('        if (event.name === "' + entry.name + '") {');
-    lines.push('            const result: any = event.parameters;');
-    lines.push('            return {');
+    lines.push('    const result: any = this.events[index].parameters;');
+    lines.push('    return {');
+    lines.push('        event: this.events[index],');
+    lines.push('        data: {');
 
     for (var i = 0; i < entry.inputs.length; i++) {
         var out = entry.inputs[i];
-        lines.push('                ' + out.name + ': result[' + i + ']' + ',');
+        lines.push('            ' + out.name + ': result[' + i + ']' + ',');
     }
 
-    lines.push('            }');
-    lines.push('        }');
-    lines.push('    }');
+    lines.push('        },');
 
-    lines.push('    return null;');
+    lines.push('    };');
 
     lines.push('}');
 
