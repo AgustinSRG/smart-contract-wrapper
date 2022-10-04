@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { QuantityLike, BytesLike, TransactionSendingOptions, deploySmartContract, Address, Quantity, MethodCallingOptions, AddressLike, MethodTransactionOptions, SmartContractEvent, TransactionResult, SmartContractInterface, RPCOptions, ABILike } from "../../src";
+import { QuantityLike, BytesLike, TransactionSendingOptions, deploySmartContract, Address, Quantity, SmartContractEventWrapper, SmartContractEvent, MethodCallingOptions, AddressLike, MethodTransactionOptions, TransactionResult, SmartContractInterface, BlockTag, RPCOptions, ABILike } from "../../src";
 
 export class ERC20Wrapper {
     private _contractInterface: SmartContractInterface;
@@ -104,7 +104,14 @@ export class ERC20Wrapper {
             throw new Error("Transaction reverted");
         }
     }
+
+    public async findEvents(fromBlock: QuantityLike | BlockTag, toBlock: QuantityLike | BlockTag): Promise<ERC20EventCollection> {
+        const events = await this._contractInterface.findEvents(fromBlock, toBlock);
+        return new ERC20EventCollection(events);
+    }
 }
+
+export type ERC20EventType = "Transfer" | "Approval";
 
 export class ERC20EventCollection {
     public events: SmartContractEvent[];
@@ -112,32 +119,40 @@ export class ERC20EventCollection {
         this.events = events;
     }
 
-    public findTransferEvent(): TransferEvent | null {
-        for (let event of this.events) {
-            if (event.name === "Transfer") {
-                const result: any = event.parameters;
-                return {
-                    from: result[0],
-                    to: result[1],
-                    value: result[2],
-                }
-            }
-        }
-        return null;
+    public length(): number {
+        return this.events.length
     }
 
-    public findApprovalEvent(): ApprovalEvent | null {
-        for (let event of this.events) {
-            if (event.name === "Approval") {
-                const result: any = event.parameters;
-                return {
-                    owner: result[0],
-                    spender: result[1],
-                    value: result[2],
-                }
-            }
-        }
-        return null;
+    public getEventType(index: number): ERC20EventType {
+        return <any>this.events[index].name
+    }
+
+    public filter(eventType: ERC20EventType): ERC20EventCollection {
+        return new ERC20EventCollection(this.events.filter(event => event.name === eventType));
+    }
+
+    public getTransferEvent(index: number): SmartContractEventWrapper<TransferEvent> {
+        const result: any = this.events[index].parameters;
+        return {
+            event: this.events[index],
+            data: {
+                from: result[0],
+                to: result[1],
+                value: result[2],
+            },
+        };
+    }
+
+    public getApprovalEvent(index: number): SmartContractEventWrapper<ApprovalEvent> {
+        const result: any = this.events[index].parameters;
+        return {
+            event: this.events[index],
+            data: {
+                owner: result[0],
+                spender: result[1],
+                value: result[2],
+            },
+        };
     }
 }
 

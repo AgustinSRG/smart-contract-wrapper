@@ -7,7 +7,7 @@ import { normalizeABIResult, parseAddress, parseBytes } from "./utils";
 import { Interface } from "@ethersproject/abi";
 import { sendTransaction } from "./tx";
 import { interpretLog } from "./events";
-import { ABILike, Address, AddressLike, BytesLike, InputABIParams, MethodCallingOptions, MethodTransactionOptions, OutputABIParams, QuantityLike, RPCOptions, SmartContractEvent, TransactionLog, TransactionReceipt, TransactionResult, TransactionSendingOptions } from "./types";
+import { ABILike, Address, AddressLike, BlockTag, BytesLike, InputABIParams, MethodCallingOptions, MethodTransactionOptions, OutputABIParams, QuantityLike, RPCOptions, SmartContractEvent, TransactionLog, TransactionReceipt, TransactionResult, TransactionSendingOptions } from "./types";
 
 /**
  * Deploys smart contract
@@ -155,5 +155,21 @@ export class SmartContractInterface {
             }
         }
         return null;
+    }
+
+    /**
+     * Finds smart contract events in a block range
+     * @param fromBlock First block in the range
+     * @param toBlock Last block in the range
+     * @returns The array of parsed events
+     */
+    public async findEvents(fromBlock: QuantityLike | BlockTag, toBlock: QuantityLike | BlockTag): Promise<SmartContractEvent[]> {
+        const logs = await Web3RPCClient.getInstance().getLogs({
+            fromBlock: fromBlock,
+            toBlock: toBlock,
+            address: this.address,
+        }, this.rpcOptions);
+
+        return this.parseTransactionLogs(logs);
     }
 }

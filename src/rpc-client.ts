@@ -3,7 +3,7 @@
 "use strict";
 
 import { Request } from "./request";
-import { AddressLike, BlockData, Bytes, BytesLike, MessageCallOptions, Quantity, RPCOptions, TransactionReceipt } from "./types";
+import { AddressLike, BlockData, BlockTag, Bytes, BytesLike, MessageCallOptions, Quantity, QuantityLike, RPCOptions, TransactionLog, TransactionLogFilterOptions, TransactionReceipt } from "./types";
 import { parseAddress, parseBytes, parseQuantity, toHex } from "./utils";
 
 /**
@@ -69,7 +69,10 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The block data
      */
-    public async getBlockByNumber(num: "latest" | "pending" | number, options: RPCOptions): Promise<BlockData> {
+    public async getBlockByNumber(num: BlockTag | QuantityLike, options: RPCOptions): Promise<BlockData> {
+        if (typeof num !== "string") {
+            num = toHex(num);
+        }
         const result = await this.rpcRequest("eth_getBlockByNumber", [num, false], options);
 
         if (result === null) {
@@ -137,7 +140,7 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The transaction count
      */
-    public async getTransactionCount(address: AddressLike, tag: "latest" | "pending", options: RPCOptions): Promise<Quantity> {
+    public async getTransactionCount(address: AddressLike, tag: BlockTag, options: RPCOptions): Promise<Quantity> {
         const result = await this.rpcRequest("eth_getTransactionCount", [toHex(address), tag], options);
         return parseQuantity(result);
     }
@@ -149,7 +152,7 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The account balance
      */
-    public async getBalance(address: AddressLike, tag: "latest" | "pending", options: RPCOptions): Promise<Quantity> {
+    public async getBalance(address: AddressLike, tag: BlockTag, options: RPCOptions): Promise<Quantity> {
         const result = await this.rpcRequest("eth_getBalance", [toHex(address), tag], options);
         return parseQuantity(result);
     }
@@ -161,7 +164,7 @@ export class Web3RPCClient {
      * @param options RPC options
      * @returns The results (ABI encoded)
      */
-    public async msgCall(callOptions: MessageCallOptions, tag: "latest" | "pending", options: RPCOptions): Promise<Bytes> {
+    public async msgCall(callOptions: MessageCallOptions, tag: BlockTag, options: RPCOptions): Promise<Bytes> {
         const result = await this.rpcRequest("eth_call", [{
             from: toHex(callOptions.from),
             to: toHex(callOptions.to),
@@ -238,6 +241,63 @@ export class Web3RPCClient {
 
             status: parseQuantity(result.status),
         };
+    }
+
+    /**
+     * Gets transaction logs
+     * @param filter Block range and filter
+     * @param options RPC options
+     * @returns The array of transaction logs
+     */
+    public async getLogs(filter: TransactionLogFilterOptions, options: RPCOptions): Promise<TransactionLog[]> {
+        const parsedOptions: TransactionLogFilterOptions = {};
+
+        if (filter.fromBlock !== undefined) {
+            if (typeof filter.fromBlock !== "string") {
+                parsedOptions.fromBlock = toHex(filter.fromBlock);
+            } else {
+                parsedOptions.fromBlock = filter.fromBlock;
+            }
+        }
+
+        if (filter.toBlock !== undefined) {
+            if (typeof filter.toBlock !== "string") {
+                parsedOptions.toBlock = toHex(filter.toBlock);
+            } else {
+                parsedOptions.toBlock = filter.toBlock;
+            }
+        }
+
+        if (filter.address !== undefined) {
+            parsedOptions.address = filter.address;
+        }
+
+        if (filter.topics !== undefined) {
+            parsedOptions.topics = filter.topics.map(t => {
+                return toHex(t);
+            });
+        }
+
+        const result = await this.rpcRequest("eth_getLogs", [parsedOptions], options);
+
+        return forceArray(result).map(l => {
+            if (!l || typeof l !== "object") {
+                l = {};
+            }
+            return {
+                removed: !!l.removed,
+                logIndex: parseQuantity(l.logIndex),
+                transactionIndex: parseQuantity(l.transactionIndex),
+                transactionHash: parseBytes(l.transactionHash),
+                blockHash: parseBytes(l.blockHash),
+                blockNumber: parseQuantity(l.blockNumber),
+                address: parseAddress(l.address),
+                data: parseBytes(l.data),
+                topics: forceArray(l.topics).map(t => {
+                    return parseBytes(t);
+                }),
+            };
+        });
     }
 }
 

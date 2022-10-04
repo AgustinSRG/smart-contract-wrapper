@@ -3,7 +3,7 @@
 "use strict";
 
 import { expect } from 'chai';
-import { parseAddress, parseBytes, parseQuantity, privateKeyToAddress } from '../src';
+import { parseAddress, parseBytes, parseQuantity, privateKeyToAddress, SmartContractEventWrapper } from '../src';
 import { ERC20Wrapper, TransferEvent } from "./utils/erc20"
 import { ERC20_BYTECODE } from './utils/erc20-data';
 
@@ -53,7 +53,8 @@ describe("Smart contract wrapper", function () {
         expect(bal).to.be.equal(TEST_INITIAL_SUPPLY);
     });
 
-    let event: TransferEvent | null;
+    let event: TransferEvent;
+    let blockNum: bigint;
 
     it('Should transfer to test address without errors', async () => {
         const res = await contract.transfer(TEST_ADDRESS_1, BigInt(1), {
@@ -62,7 +63,9 @@ describe("Smart contract wrapper", function () {
             logFunction: LOG_FUNC,
         });
 
-        event = res.result.findTransferEvent();
+        blockNum = res.receipt.blockNumber;
+
+        event = res.result.filter("Transfer").getTransferEvent(0).data;
     });
 
     it('Should emit the Transfer event', () => {
@@ -83,5 +86,18 @@ describe("Smart contract wrapper", function () {
         const bal1 = await contract.balanceOf(TEST_ADDRESS_1);
 
         expect(bal1).to.be.equal(BigInt(1));
+    });
+
+
+    it('Should have saved the transfer event', async () => {
+        const events = await contract.findEvents(blockNum, blockNum);
+
+        expect(events.length()).to.be.greaterThan(0);
+
+        const transferEvent = events.filter("Transfer").getTransferEvent(0);
+
+        expect(transferEvent.data.from.toUpperCase()).to.be.equal(TEST_ADDRESS.toUpperCase());
+        expect(transferEvent.data.to.toUpperCase()).to.be.equal(TEST_ADDRESS_1.toUpperCase());
+        expect(transferEvent.data.value).to.be.equal(BigInt(1));
     });
 });
