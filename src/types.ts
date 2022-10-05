@@ -25,7 +25,7 @@ export type Quantity = bigint;
 export type Bytes = Buffer;
 
 /**
- * Can be parsed into ethrereum address
+ * Can be parsed into ethereum address
  */
 export type AddressLike = string;
 
@@ -228,7 +228,7 @@ export interface MethodCallingOptions {
 }
 
 /**
- * Opntions for sending a method transaction
+ * Options for sending a method transaction
  */
 export interface MethodTransactionOptions {
     /**
@@ -248,7 +248,7 @@ export interface MethodTransactionOptions {
     isFeeMarket?: boolean;
 
     /**
-     * Gas price, by default 0
+     * Gas price, by default it used the recommended gas price
      */
     gasPrice?: QuantityLike;
 
@@ -263,12 +263,12 @@ export interface MethodTransactionOptions {
     maxFeePerGas?: QuantityLike;
 
     /**
-     * Gas limit, by default 6000000
+     * Gas limit, by default it used the estimated gas
      */
     gasLimit?: QuantityLike;
 
     /**
-     * Timeout in milliseconds to wait for the transaction receipt. Set to 0 for no timeout. By default no tiemout.
+     * Timeout in milliseconds to wait for the transaction receipt. Set to 0 for no timeout. By default no timeout.
      */
     receiptWaitTimeout?: number;
 
@@ -276,7 +276,7 @@ export interface MethodTransactionOptions {
      * Transaction nonce. 
      * If not provided:
      *  - The transactions count is used.
-     *  - In case of collission, the transaction will be retried with a new nonce.
+     *  - In case of collision, the transaction will be retried with a new nonce.
      */
     nonce?: QuantityLike;
 
