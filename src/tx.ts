@@ -95,9 +95,31 @@ async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value:
         }
     }
 
+    let recommendedGasLimit = BigInt(6000000);
+
+    if (options.gasLimit === undefined) {
+        try {
+            recommendedGasLimit = await Web3RPCClient.getInstance().estimateGas({
+                to: to,
+                from: accountAddress,
+                data: data,
+                value: value,
+            }, "pending", options);
+            
+            if (options.logFunction) {
+                options.logFunction(`Recommended gas limit of the transaction: ${toHex(recommendedGasLimit)} wei`);
+            }
+        } catch (ex) {
+            if (options.logFunction) {
+                options.logFunction(`Could not fetch the recommended gas limit. Error: ${ex.message}`);
+            }
+        }
+    }
+
     const maxFeePerGas = toHex(options.maxFeePerGas === undefined ? recommendedMaxPriorityFeePerGas : options.maxFeePerGas);
     const maxPriorityFeePerGas = toHex(options.maxPriorityFeePerGas === undefined ? 0 : options.maxPriorityFeePerGas);
-    const gasLimitHex = toHex(options.gasLimit === undefined ? 6000000 : options.gasLimit);
+
+    const gasLimitHex = toHex(options.gasLimit === undefined ? recommendedGasLimit : options.gasLimit);
 
     let nonceHex: string;
 
@@ -186,8 +208,29 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
         }
     }
 
+    let recommendedGasLimit = BigInt(6000000);
+
+    if (options.gasLimit === undefined) {
+        try {
+            recommendedGasLimit = await Web3RPCClient.getInstance().estimateGas({
+                to: to,
+                from: accountAddress,
+                data: data,
+                value: value,
+            }, "pending", options);
+            
+            if (options.logFunction) {
+                options.logFunction(`Recommended gas limit of the transaction: ${toHex(recommendedGasLimit)} wei`);
+            }
+        } catch (ex) {
+            if (options.logFunction) {
+                options.logFunction(`Could not fetch the recommended gas limit. Error: ${ex.message}`);
+            }
+        }
+    }
+
     const gasPriceHex = toHex(options.gasPrice === undefined ? recommendedGasPrice : options.gasPrice);
-    const gasLimitHex = toHex(options.gasLimit === undefined ? 6000000 : options.gasLimit);
+    const gasLimitHex = toHex(options.gasLimit === undefined ? recommendedGasLimit : options.gasLimit);
 
     let nonceHex: string;
 

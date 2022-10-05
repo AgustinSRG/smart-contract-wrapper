@@ -134,6 +134,26 @@ export class Web3RPCClient {
     }
 
     /**
+     * Estimates gas for a transaction
+     * This can be used to set the gas limit
+     * @param callOptions Calling options
+     * @param tag Tag that can be latest=last block or pending=last pending transaction
+     * @param options RPC options
+     * @returns The estimated gas used by the transaction
+     */
+    public async estimateGas(callOptions: MessageCallOptions, tag: BlockTag, options: RPCOptions): Promise<Quantity> {
+        const result = await this.rpcRequest("eth_estimateGas", [{
+            from: toHex(callOptions.from),
+            to: toHex(callOptions.to),
+            gas: toHex(callOptions.gas),
+            gasPrice: toHex(callOptions.gasPrice),
+            value: toHex(callOptions.value),
+            data: toHex(callOptions.data),
+        }, tag], options);
+        return parseQuantity(result);
+    }
+
+    /**
      * Get transaction count (for next nonce)
      * @param address Address (0x...)
      * @param tag Tag that can be latest=last block or pending=last pending transaction
