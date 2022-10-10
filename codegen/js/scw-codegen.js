@@ -163,7 +163,7 @@ function makeDeployFunction(entry, result, className, tabSpaces) {
     result.imports["deploySmartContract"] = true;
 
     lines.push('public static async deploy(' + params.join(", ") + '): Promise<' + className + '> {');
-    lines.push('    const deployed = await deploySmartContract(bytecode, CONTRACT_ABI, [' + entry.inputs.map(function (i) { return i.name; }).join(", ") + '], ' + (entry.payable ? "value" : "0") + ', options);');
+    lines.push('    const deployed = await deploySmartContract(bytecode, CONTRACT_ABI, [' + getCallArgumentsList(entry) + '], ' + (entry.payable ? "value" : "0") + ', options);');
     lines.push('    if (deployed.receipt.status > BigInt(0)) {');
     lines.push('        return new ' + className + '(deployed.result, options);');
     lines.push('    } else {');
@@ -177,9 +177,13 @@ function makeDeployFunction(entry, result, className, tabSpaces) {
 }
 
 function makeFunctionParams(inputs, result) {
-    return inputs.map(function (i) {
-        return i.name + ": " + getABITypescriptType(i.type, result, true);
+    return inputs.map(function (i, j) {
+        return (i.name || ("param_" + j)) + ": " + getABITypescriptType(i.type, result, true);
     });
+}
+
+function getCallArgumentsList(entry) {
+    return entry.inputs.map(function (i, j) { return i.name || "param_" + j; }).join(", ");
 }
 
 function getABITypescriptType(abiType, result, isInput) {
@@ -301,7 +305,7 @@ function makeViewFunction(entry, result, tabSpaces) {
 
     lines.push('public async ' + entry.name + '(' + params.join(", ") + '): Promise<' + makeFunctionResultType(entry.outputs, outType, result) + '> {');
 
-    lines.push('    ' + (outType === "void" ? "" : 'const result: any = ') + 'await this._contractInterface.callViewMethod("' + entry.name + '", [' + entry.inputs.map(function (i) { return i.name; }).join(", ") + '], options || {});');
+    lines.push('    ' + (outType === "void" ? "" : 'const result: any = ') + 'await this._contractInterface.callViewMethod("' + entry.name + '", [' + getCallArgumentsList(entry) + '], options || {});');
 
     if (outType === "single") {
         lines.push('    return result[0]');
@@ -344,9 +348,9 @@ function makeTransactionFunction(entry, result, tabSpaces, className) {
     lines.push('public async ' + entry.name + '(' + params.join(", ") + '): Promise<TransactionResult<' + resultName + '>> {');
 
     if (entry.payable) {
-        lines.push('    const result = await this._contractInterface.callPayableMethod("' + entry.name + '", [' + entry.inputs.map(function (i) { return i.name; }).join(", ") + '], value, options);');
+        lines.push('    const result = await this._contractInterface.callPayableMethod("' + entry.name + '", [' + getCallArgumentsList(entry) + '], value, options);');
     } else {
-        lines.push('    const result = await this._contractInterface.callMutableMethod("' + entry.name + '", [' + entry.inputs.map(function (i) { return i.name; }).join(", ") + '], options);');
+        lines.push('    const result = await this._contractInterface.callMutableMethod("' + entry.name + '", [' + getCallArgumentsList(entry) + '], options);');
     }
 
     lines.push('');
