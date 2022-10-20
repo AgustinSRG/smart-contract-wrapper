@@ -5,6 +5,7 @@
 import { QuantityLike, BytesLike, TransactionSendingOptions, deploySmartContract, Address, Quantity, SmartContractEventWrapper, SmartContractEvent, MethodCallingOptions, AddressLike, MethodTransactionOptions, TransactionResult, SmartContractInterface, BlockTag, RPCOptions, ABILike } from "../../src";
 
 export class ERC20Wrapper {
+    public address: Address;
     private _contractInterface: SmartContractInterface;
 
     public static async deploy(name_: string, symbol_: string, initialSupply_: QuantityLike, bytecode: BytesLike, options: TransactionSendingOptions): Promise<ERC20Wrapper> {
@@ -18,6 +19,7 @@ export class ERC20Wrapper {
 
     constructor(address: AddressLike, rpcOptions: RPCOptions) {
         this._contractInterface = new SmartContractInterface(address, CONTRACT_ABI, rpcOptions);
+        this.address = this._contractInterface.address;
     }
 
     public async name(options?: MethodCallingOptions): Promise<string> {

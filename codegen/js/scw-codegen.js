@@ -37,6 +37,7 @@ function generateWrappper(className, abi) {
 
     result.imports["SmartContractInterface"] = true;
     result.imports["AddressLike"] = true;
+    result.imports["Address"] = true;
     result.imports["QuantityLike"] = true;
     result.imports["BlockTag"] = true;
     result.imports["RPCOptions"] = true;
@@ -59,6 +60,7 @@ function generateWrappper(className, abi) {
 
     lines.push('export class ' + wrapperName + ' {');
 
+    lines.push('    public address: Address;');
     lines.push('    private _contractInterface: SmartContractInterface;');
 
     lines.push('');
@@ -69,6 +71,7 @@ function generateWrappper(className, abi) {
 
     lines.push('    constructor(address: AddressLike, rpcOptions: RPCOptions) {');
     lines.push('        this._contractInterface = new SmartContractInterface(address, CONTRACT_ABI, rpcOptions);');
+    lines.push('        this.address = this._contractInterface.address;');
     lines.push('    }');
 
     for (var i = 0; i < result.viewFn.length; i++) {
