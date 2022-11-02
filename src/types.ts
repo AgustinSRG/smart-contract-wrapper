@@ -188,13 +188,32 @@ export interface TransactionLog {
 }
 
 /**
+ * RPC provider to send json-RPC request to the node
+ */
+export interface RPCProvider {
+    /**
+     * Performs a JSON-RPC request
+     * @param method RPC Method
+     * @param params Method parameters
+     * @param timeout Timeout in ms
+     * @returns The JSON RPC result
+     */
+    rpcRequest(method: string, params: any[], timeout: number): Promise<any>;
+}
+
+/**
  * RPC request options
  */
 export interface RPCOptions {
     /**
+     * RPC provider to send JSON-RPC request to the node
+     */
+    provider?: RPCProvider;
+
+    /**
      * RPC URL. Example: http://localhost:8545
      */
-    rpcURL: string;
+    rpcURL?: string;
 
     /**
      * Request timeout in milliseconds
