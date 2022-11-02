@@ -4,7 +4,7 @@
 
 Typescript wrapper for smart contract interaction.
 
-This is a library to interact with Ethereum EVM using the json-RPC API. It allows both calling pure and view methods and also sending transactions.
+This is a library to interact with Ethereum EVM using the JSON-RPC API. It allows both calling pure and view methods and also sending transactions.
 
 ## Installation
 

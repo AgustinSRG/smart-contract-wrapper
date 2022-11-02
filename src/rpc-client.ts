@@ -32,6 +32,11 @@ export class Web3RPCClient {
      * @returns The JSON RPC result
      */
     public rpcRequest(method: string, params: any[], options: RPCOptions): Promise<any> {
+        if (options.provider !== undefined && options.provider) {
+            return options.provider.rpcRequest(method, params, options.timeout);
+        } else if (options.rpcURL === undefined) {
+            throw new Error("You must set a provider or an URL to send a json-RPC request");
+        }
         return new Promise<any>((resolve, reject) => {
             Request.post(options.rpcURL, {
                 json: {

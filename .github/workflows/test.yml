@@ -17,10 +17,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ethereum test node
-      uses: AgustinSRG/eth-test-node-action@v2
+      uses: AgustinSRG/eth-test-node-action@v3
       with:
         rpcPort: 8545
         gethVersion: alltools-latest
+        websocket: 'ON'
+        websocketPort: 8546
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
