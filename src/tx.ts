@@ -51,9 +51,8 @@ export async function sendTransaction(to: AddressLike, data: BytesLike, value: Q
                 throw ex;
             }
         }
-
-        return receipt;
     }
+    return receipt;
 }
 
 async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
