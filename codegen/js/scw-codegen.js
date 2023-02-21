@@ -226,8 +226,7 @@ function getABITypescriptType(abiType, result, isInput) {
             result.imports["BytesLike"] = true;
             return "BytesLike" + (isArray ? "[]" : "");
         } else {
-            result.imports["Bytes"] = true;
-            return "Bytes" + (isArray ? "[]" : "");
+            return "string" + (isArray ? "[]" : "");
         }
     } else if ((/^\(.*\)$/).test(abiType)) {
         // Tuple
