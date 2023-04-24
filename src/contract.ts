@@ -4,7 +4,7 @@
 
 import { Web3RPCClient } from "./rpc-client";
 import { normalizeABIResult, parseAddress, parseBytes } from "./utils";
-import { Interface } from "@ethersproject/abi";
+import { FunctionFragment, Interface } from "@ethersproject/abi";
 import { sendTransaction } from "./tx";
 import { interpretLog } from "./events";
 import { ABILike, Address, AddressLike, BlockTag, BytesLike, InputABIParams, MethodCallingOptions, MethodTransactionOptions, OutputABIParams, QuantityLike, RPCOptions, SmartContractEvent, TransactionLog, TransactionReceipt, TransactionResult, TransactionSendingOptions } from "./types";
@@ -72,12 +72,12 @@ export class SmartContractInterface {
 
     /**
      * Calls a view or pure method
-     * @param method The nethod name (must be in the ABI)
+     * @param method The method name (must be in the ABI)
      * @param params The parameters for the method
      * @param options The options for calling the method
      * @returns The decoded method result
      */
-    public async callViewMethod(method: string, params: InputABIParams, options: MethodCallingOptions): Promise<OutputABIParams> {
+    public async callViewMethod(method: string | FunctionFragment, params: InputABIParams, options: MethodCallingOptions): Promise<OutputABIParams> {
         const callDataHexString = this.contractInterface.encodeFunctionData(method, params);
         const result = await Web3RPCClient.getInstance().msgCall({
             to: this.address,
@@ -93,12 +93,12 @@ export class SmartContractInterface {
     /**
      * Calls a mutable, non-payable method
      * This sends a transaction
-     * @param method The nethod name (must be in the ABI)
+     * @param method The method name (must be in the ABI)
      * @param params The parameters for the method
      * @param options The options for sending the transaction
      * @returns The transaction receipt
      */
-    public async callMutableMethod(method: string, params: InputABIParams, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
+    public async callMutableMethod(method: string | FunctionFragment, params: InputABIParams, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
         const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
         const receipt = await sendTransaction(this.address, txDataHexString, 0, { ...options, ...this.rpcOptions });
         return {
@@ -110,13 +110,13 @@ export class SmartContractInterface {
     /**
      * Calls a mutable, payable method
      * This sends a transaction
-     * @param method The nethod name (must be in the ABI)
+     * @param method The method name (must be in the ABI)
      * @param params The parameters for the method
      * @param value The value to send (wei)
      * @param options The options for sending the transaction
      * @returns The transaction receipt
      */
-    public async callPayableMethod(method: string, params: InputABIParams, value: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
+    public async callPayableMethod(method: string | FunctionFragment, params: InputABIParams, value: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
         const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
         const receipt = await sendTransaction(this.address, txDataHexString, value, { ...options, ...this.rpcOptions });
         return {
