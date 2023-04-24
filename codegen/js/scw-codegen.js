@@ -16,6 +16,21 @@ function generateWrappper(className, abi) {
 
     var wrapperName = className + "Wrapper";
 
+    var overloadedMethods = Object.create(null);
+    var overloadedMethodsIndex = Object.create(null);
+    var methodSet = Object.create(null); 
+
+    for (var i = 0; i < abi.length; i++) {
+        var entry = abi[i];
+    
+        if (entry.type === "function") {
+            if (methodSet[entry.name]) {
+                overloadedMethods[entry.name] = true;
+                overloadedMethodsIndex[entry.name] = 0;
+            }
+            methodSet[entry.name] = true;
+        }
+    }
 
     for (var i = 0; i < abi.length; i++) {
         var entry = abi[i];
@@ -24,9 +39,9 @@ function generateWrappper(className, abi) {
             result.deployFn = makeDeployFunction(entry, result, wrapperName, "    ");
         } else if (entry.type === "function") {
             if (entry.stateMutability === "view" || entry.stateMutability === "pure") {
-                result.viewFn.push(makeViewFunction(entry, result, "    "));
+                result.viewFn.push(makeViewFunction(entry, result, "    ", overloadedMethods[entry.name], overloadedMethodsIndex));
             } else {
-                result.txFn.push(makeTransactionFunction(entry, result, "    ", className));
+                result.txFn.push(makeTransactionFunction(entry, result, "    ", className, overloadedMethods[entry.name], overloadedMethodsIndex));
             }
         } else if (entry.type === "event") {
             result.eventTypes.push(entry.name);
@@ -281,7 +296,7 @@ function makeFunctionResultType(outputs, outType, result) {
     }
 }
 
-function makeViewFunction(entry, result, tabSpaces) {
+function makeViewFunction(entry, result, tabSpaces, isOverloaded, overloadedMethodsIndex) {
     var lines = [];
 
     var params = makeFunctionParams(entry.inputs, result);
@@ -305,9 +320,17 @@ function makeViewFunction(entry, result, tabSpaces) {
         }
     }
 
-    lines.push('public async ' + entry.name + '(' + params.join(", ") + '): Promise<' + makeFunctionResultType(entry.outputs, outType, result) + '> {');
+    var methodName = entry.name;
 
-    lines.push('    ' + (outType === "void" ? "" : 'const result: any = ') + 'await this._contractInterface.callViewMethod("' + entry.name + '", [' + getCallArgumentsList(entry) + '], options || {});');
+    if (isOverloaded) {
+        methodName += "__" + overloadedMethodsIndex[entry.name];
+        overloadedMethodsIndex[entry.name]++;
+        result.imports["FunctionFragment"] = true;
+    }
+
+    lines.push('public async ' + methodName + '(' + params.join(", ") + '): Promise<' + makeFunctionResultType(entry.outputs, outType, result) + '> {');
+
+    lines.push('    ' + (outType === "void" ? "" : 'const result: any = ') + 'await this._contractInterface.callViewMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], options || {});');
 
     if (outType === "single") {
         lines.push('    return result[0]');
@@ -329,7 +352,7 @@ function makeViewFunction(entry, result, tabSpaces) {
     }).join("\n");
 }
 
-function makeTransactionFunction(entry, result, tabSpaces, className) {
+function makeTransactionFunction(entry, result, tabSpaces, className, isOverloaded, overloadedMethodsIndex) {
     var lines = [];
 
     var resultName = className + "EventCollection";
@@ -347,12 +370,20 @@ function makeTransactionFunction(entry, result, tabSpaces, className) {
     result.imports["SmartContractEvent"] = true;
     result.imports["TransactionResult"] = true;
 
-    lines.push('public async ' + entry.name + '(' + params.join(", ") + '): Promise<TransactionResult<' + resultName + '>> {');
+    var methodName = entry.name;
+
+    if (isOverloaded) {
+        methodName += "__" + overloadedMethodsIndex[entry.name];
+        overloadedMethodsIndex[entry.name]++;
+        result.imports["FunctionFragment"] = true;
+    }
+
+    lines.push('public async ' + methodName + '(' + params.join(", ") + '): Promise<TransactionResult<' + resultName + '>> {');
 
     if (entry.payable) {
-        lines.push('    const result = await this._contractInterface.callPayableMethod("' + entry.name + '", [' + getCallArgumentsList(entry) + '], value, options);');
+        lines.push('    const result = await this._contractInterface.callPayableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], value, options);');
     } else {
-        lines.push('    const result = await this._contractInterface.callMutableMethod("' + entry.name + '", [' + getCallArgumentsList(entry) + '], options);');
+        lines.push('    const result = await this._contractInterface.callMutableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], options);');
     }
 
     lines.push('');
@@ -415,4 +446,12 @@ function makeEventFunc(entry, result, tabSpaces) {
     return lines.map(function (l) {
         return tabSpaces + l;
     }).join("\n");
+}
+
+function sanitizeMethodEntry(entry, isOverloaded) {
+    if (!isOverloaded) {
+        return JSON.stringify(entry.name);
+    }
+
+    return "FunctionFragment.fromObject(" + JSON.stringify(entry) + ")";
 }
