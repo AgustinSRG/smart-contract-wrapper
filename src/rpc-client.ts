@@ -114,6 +114,10 @@ export class Web3RPCClient {
             baseFeePerGas: parseQuantity(result.baseFeePerGas),
 
             timestamp: parseQuantity(result.timestamp),
+
+            transactions: Array.isArray(result.transactions) ? result.transactions.map(parseBytes) : [],
+
+            uncles: Array.isArray(result.uncles) ? result.uncles.map(parseBytes) : [],
         };
     }
 
