@@ -114,6 +114,10 @@ export class Web3RPCClient {
             baseFeePerGas: parseQuantity(result.baseFeePerGas),
 
             timestamp: parseQuantity(result.timestamp),
+
+            transactions: Array.isArray(result.transactions) ? result.transactions.map(parseBytes) : [],
+
+            uncles: Array.isArray(result.uncles) ? result.uncles.map(parseBytes) : [],
         };
     }
 
@@ -299,7 +303,13 @@ export class Web3RPCClient {
 
         if (filter.topics !== undefined) {
             parsedOptions.topics = filter.topics.map(t => {
-                return toHex(t);
+                if (Array.isArray(t) && !(t instanceof Buffer)) {
+                    return t.map(st => {
+                        return toHex(st);
+                    });
+                } else {
+                    return toHex(t);
+                }
             });
         }
 

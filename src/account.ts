@@ -2,7 +2,7 @@
 
 "use strict";
 import { keccak256 } from 'ethereum-cryptography/keccak'
-import { Point } from 'ethereum-cryptography/secp256k1'
+import { secp256k1 } from 'ethereum-cryptography/secp256k1'
 import { Address } from './types';
 import { hexWithPrefix } from './utils';
 
@@ -21,6 +21,6 @@ export function publicKeyToAddress(pubKey: Buffer): Address {
  * @returns The address
  */
 export function privateKeyToAddress(privateKey: Buffer): Address {
-    const publicKey = Buffer.from(Point.fromPrivateKey(privateKey).toRawBytes(false).slice(1));
+    const publicKey = Buffer.from(secp256k1.ProjectivePoint.fromPrivateKey(privateKey).toRawBytes(false).slice(1));
     return publicKeyToAddress(publicKey);
 }

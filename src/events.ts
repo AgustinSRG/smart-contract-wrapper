@@ -2,7 +2,7 @@
 
 "use strict"
 
-import { JsonFragment } from "@ethersproject/abi";
+import { JsonFragment, Result } from "@ethersproject/abi";
 import { keccak256 } from 'ethereum-cryptography/keccak';
 import { Interface } from "@ethersproject/abi";
 import { normalizeABIResult, toHex } from "./utils";
@@ -40,7 +40,13 @@ export function interpretLog(log: TransactionLog, abi: ABILike, contractInterfac
         return null;
     }
 
-    const data = contractInterface.decodeEventLog(eventEntry.name, log.data, log.topics.map(l => toHex(l)));
+    let data: Result;
+
+    try {
+        data = contractInterface.decodeEventLog(eventEntry.name, log.data, log.topics.map(l => toHex(l)));
+    } catch (ex) {
+        return null;
+    }
 
     return {
         name: eventEntry.name,

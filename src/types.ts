@@ -136,6 +136,10 @@ export interface BlockData {
     baseFeePerGas: Quantity,
 
     timestamp: Quantity,
+
+    transactions: Bytes[],
+
+    uncles: Bytes[],
 }
 
 /**
@@ -349,7 +353,7 @@ export interface TransactionLogFilterOptions {
     /**
      * Array of topics to filter by
      */
-    topics?: BytesLike[];
+    topics?: (BytesLike | BytesLike[])[];
 }
 
 /**
