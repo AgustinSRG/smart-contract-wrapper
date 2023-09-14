@@ -303,7 +303,13 @@ export class Web3RPCClient {
 
         if (filter.topics !== undefined) {
             parsedOptions.topics = filter.topics.map(t => {
-                return toHex(t);
+                if (Array.isArray(t) && !(t instanceof Buffer)) {
+                    return t.map(st => {
+                        return toHex(st);
+                    });
+                } else {
+                    return toHex(t);
+                }
             });
         }
 
