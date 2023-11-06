@@ -208,16 +208,33 @@ export interface RPCProvider {
 /**
  * RPC request options
  */
-export interface RPCOptions {
+export type RPCOptions = RPCOptionsWithProvider | RPCOptionsWithURL;
+
+/**
+ * RPC request options.
+ * With a provider.
+ */
+export interface RPCOptionsWithProvider {
     /**
      * RPC provider to send JSON-RPC request to the node
      */
-    provider?: RPCProvider;
+    provider: RPCProvider;
 
+    /**
+     * Request timeout in milliseconds
+     */
+    timeout?: number;
+}
+
+/**
+ * RPC request options.
+ * With an URL.
+ */
+export interface RPCOptionsWithURL {
     /**
      * RPC URL. Example: http://localhost:8545
      */
-    rpcURL?: string;
+    rpcURL: string;
 
     /**
      * Request timeout in milliseconds
@@ -312,9 +329,7 @@ export interface MethodTransactionOptions {
 /**
  * Options for sending a transaction
  */
-export interface TransactionSendingOptions extends RPCOptions, MethodTransactionOptions {
-
-}
+export type TransactionSendingOptions = RPCOptions & MethodTransactionOptions;
 
 /**
  * Transaction result
