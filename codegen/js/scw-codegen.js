@@ -1,6 +1,6 @@
 // Smart contract wrapper code generation
 
-function generateWrapper(className, abi) {
+function generateWrapper(className, abi, omitDetailsFuncs) {
     var result = {
         imports: {},
 
@@ -18,11 +18,11 @@ function generateWrapper(className, abi) {
 
     var overloadedMethods = Object.create(null);
     var overloadedMethodsIndex = Object.create(null);
-    var methodSet = Object.create(null); 
+    var methodSet = Object.create(null);
 
     for (var i = 0; i < abi.length; i++) {
         var entry = abi[i];
-    
+
         if (entry.type === "function") {
             if (methodSet[entry.name]) {
                 overloadedMethods[entry.name] = true;
@@ -36,12 +36,12 @@ function generateWrapper(className, abi) {
         var entry = abi[i];
 
         if (entry.type === "constructor") {
-            result.deployFn = makeDeployFunction(entry, result, wrapperName, "    ");
+            result.deployFn = makeDeployFunction(entry, result, wrapperName, "    ", omitDetailsFuncs);
         } else if (entry.type === "function") {
             if (entry.stateMutability === "view" || entry.stateMutability === "pure") {
                 result.viewFn.push(makeViewFunction(entry, result, "    ", overloadedMethods[entry.name], overloadedMethodsIndex));
             } else {
-                result.txFn.push(makeTransactionFunction(entry, result, "    ", className, overloadedMethods[entry.name], overloadedMethodsIndex));
+                result.txFn.push(makeTransactionFunction(entry, result, "    ", className, overloadedMethods[entry.name], overloadedMethodsIndex, omitDetailsFuncs));
             }
         } else if (entry.type === "event") {
             result.eventTypes.push(entry.name);
@@ -51,7 +51,9 @@ function generateWrapper(className, abi) {
     }
 
     result.imports["SmartContractInterface"] = true;
-    result.imports["TransactionBuildDetails"] = true;
+    if (!omitDetailsFuncs) {
+        result.imports["TransactionBuildDetails"] = true;
+    }
     result.imports["AddressLike"] = true;
     result.imports["Address"] = true;
     result.imports["QuantityLike"] = true;
@@ -112,12 +114,12 @@ function generateWrapper(className, abi) {
     lines.push('');
 
     lines.push('export type ' + className + "EventType = " + (result.eventTypes.map(function (t) {
-      return JSON.stringify(t);  
+        return JSON.stringify(t);
     }).join(" | ") || '"string"') + ';');
 
     lines.push('');
 
-    lines.push('export class ' +  className + "EventCollection" + " {");
+    lines.push('export class ' + className + "EventCollection" + " {");
 
     lines.push('    public events: SmartContractEvent[];');
 
@@ -163,7 +165,7 @@ function generateWrapper(className, abi) {
     return lines.join("\n") + "\n";
 }
 
-function makeDeployFunction(entry, result, className, tabSpaces) {
+function makeDeployFunction(entry, result, className, tabSpaces, omitDetailsFuncs) {
     var lines = [];
 
     var params = makeFunctionParams(entry.inputs, result);
@@ -190,13 +192,15 @@ function makeDeployFunction(entry, result, className, tabSpaces) {
     lines.push('    }');
     lines.push('}');
 
-    lines.push('');
+    if (!omitDetailsFuncs) {
+        lines.push('');
 
-    result.imports["getTxBuildDetailsForDeploy"] = true;
+        result.imports["getTxBuildDetailsForDeploy"] = true;
 
-    lines.push('public static getDeployTxBuildDetails(' + params.slice(0, params.length - 1).join(", ") + '): TransactionBuildDetails {');
-    lines.push('    return getTxBuildDetailsForDeploy(bytecode, CONTRACT_ABI, [' + getCallArgumentsList(entry) + '], ' + (entry.payable ? "value" : "0") + ');');
-    lines.push('}');
+        lines.push('public static getDeployTxBuildDetails(' + params.slice(0, params.length - 1).join(", ") + '): TransactionBuildDetails {');
+        lines.push('    return getTxBuildDetailsForDeploy(bytecode, CONTRACT_ABI, [' + getCallArgumentsList(entry) + '], ' + (entry.payable ? "value" : "0") + ');');
+        lines.push('}');
+    }
 
     return lines.map(function (l) {
         return tabSpaces + l;
@@ -361,7 +365,7 @@ function makeViewFunction(entry, result, tabSpaces, isOverloaded, overloadedMeth
     }).join("\n");
 }
 
-function makeTransactionFunction(entry, result, tabSpaces, className, isOverloaded, overloadedMethodsIndex) {
+function makeTransactionFunction(entry, result, tabSpaces, className, isOverloaded, overloadedMethodsIndex, omitDetailsFuncs) {
     var lines = [];
 
     var resultName = className + "EventCollection";
@@ -406,17 +410,19 @@ function makeTransactionFunction(entry, result, tabSpaces, className, isOverload
 
     lines.push('}');
 
-    lines.push('');
+    if (!omitDetailsFuncs) {
+        lines.push('');
 
-    lines.push('public ' + methodName + '$txBuildDetails(' + params.slice(0, params.length - 1).join(", ") + '): TransactionBuildDetails {');
+        lines.push('public ' + methodName + '$txBuildDetails(' + params.slice(0, params.length - 1).join(", ") + '): TransactionBuildDetails {');
 
-    if (entry.payable) {
-        lines.push('    return this._contractInterface.encodePayableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], value);');
-    } else {
-        lines.push('    return this._contractInterface.encodeMutableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + ']);');
+        if (entry.payable) {
+            lines.push('    return this._contractInterface.encodePayableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], value);');
+        } else {
+            lines.push('    return this._contractInterface.encodeMutableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + ']);');
+        }
+
+        lines.push('}');
     }
-
-    lines.push('}');
 
     return lines.map(function (l) {
         return tabSpaces + l;
@@ -442,7 +448,7 @@ function makeEventStruct(entry, result, tabSpaces) {
 
 function makeEventFunc(entry, result, tabSpaces) {
     var lines = [];
-    
+
     result.imports["SmartContractEventWrapper"] = true;
     result.imports["SmartContractEvent"] = true;
     lines.push('public get' + entry.name + 'Event(index: number): SmartContractEventWrapper<' + entry.name + 'Event> {');

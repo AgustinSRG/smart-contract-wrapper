@@ -20,3 +20,13 @@ body {
     height: 100vh;
     padding-top: 1rem;
 }
+
+.checkbox-label {
+    display: block;
+    padding-top: 0.25rem;
+    user-select: none;
+}
+
+.checkbox-hidden {
+    visibility: hidden;
+}

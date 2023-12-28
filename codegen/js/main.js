@@ -40,9 +40,16 @@ window.App = new Vue({
                 return;
             }
 
+            var omitDetailsFuncs = false;
+            var omitDetailsFuncsCheckbox = document.getElementById("checkbox_details");
+
+            if (omitDetailsFuncsCheckbox && omitDetailsFuncsCheckbox.checked) {
+                omitDetailsFuncs = true;
+            }
+
             if (Array.isArray(inputABI)) {
                 try {
-                    this.outputText = generateWrapper(this.contractName.replace(/\s\t/g, "_"), inputABI);
+                    this.outputText = generateWrapper(this.contractName.replace(/\s\t/g, "_"), inputABI, omitDetailsFuncs);
                 } catch (e) {
                     console.error(e);
                     this.outputText = "Invalid ABI";
