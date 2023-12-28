@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { QuantityLike, BytesLike, TransactionSendingOptions, deploySmartContract, Address, Quantity, SmartContractEventWrapper, SmartContractEvent, MethodCallingOptions, AddressLike, MethodTransactionOptions, TransactionResult, SmartContractInterface, BlockTag, RPCOptions, ABILike } from "../../src";
+import { QuantityLike, BytesLike, TransactionSendingOptions, deploySmartContract, getTxBuildDetailsForDeploy, Address, Quantity, SmartContractEventWrapper, SmartContractEvent, MethodCallingOptions, AddressLike, MethodTransactionOptions, TransactionResult, SmartContractInterface, TransactionBuildDetails, BlockTag, RPCOptions, ABILike } from "../../src";
 
 export class ERC20Wrapper {
     public address: Address;
@@ -15,6 +15,10 @@ export class ERC20Wrapper {
         } else {
             throw new Error("Transaction reverted");
         }
+    }
+    
+    public static getDeployTxBuildDetails(name_: string, symbol_: string, initialSupply_: QuantityLike, bytecode: BytesLike): TransactionBuildDetails {
+        return getTxBuildDetailsForDeploy(bytecode, CONTRACT_ABI, [name_, symbol_, initialSupply_], 0);
     }
 
     constructor(address: AddressLike, rpcOptions: RPCOptions) {
@@ -62,6 +66,10 @@ export class ERC20Wrapper {
             throw new Error("Transaction reverted");
         }
     }
+    
+    public transfer$txBuildDetails(to: AddressLike, amount: QuantityLike): TransactionBuildDetails {
+        return this._contractInterface.encodeMutableMethod("transfer", [to, amount]);
+    }
 
     public async approve(spender: AddressLike, amount: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<ERC20EventCollection>> {
         const result = await this._contractInterface.callMutableMethod("approve", [spender, amount], options);
@@ -72,6 +80,10 @@ export class ERC20Wrapper {
         } else {
             throw new Error("Transaction reverted");
         }
+    }
+    
+    public approve$txBuildDetails(spender: AddressLike, amount: QuantityLike): TransactionBuildDetails {
+        return this._contractInterface.encodeMutableMethod("approve", [spender, amount]);
     }
 
     public async transferFrom(from: AddressLike, to: AddressLike, amount: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<ERC20EventCollection>> {
@@ -84,6 +96,10 @@ export class ERC20Wrapper {
             throw new Error("Transaction reverted");
         }
     }
+    
+    public transferFrom$txBuildDetails(from: AddressLike, to: AddressLike, amount: QuantityLike): TransactionBuildDetails {
+        return this._contractInterface.encodeMutableMethod("transferFrom", [from, to, amount]);
+    }
 
     public async increaseAllowance(spender: AddressLike, addedValue: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<ERC20EventCollection>> {
         const result = await this._contractInterface.callMutableMethod("increaseAllowance", [spender, addedValue], options);
@@ -95,6 +111,10 @@ export class ERC20Wrapper {
             throw new Error("Transaction reverted");
         }
     }
+    
+    public increaseAllowance$txBuildDetails(spender: AddressLike, addedValue: QuantityLike): TransactionBuildDetails {
+        return this._contractInterface.encodeMutableMethod("increaseAllowance", [spender, addedValue]);
+    }
 
     public async decreaseAllowance(spender: AddressLike, subtractedValue: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<ERC20EventCollection>> {
         const result = await this._contractInterface.callMutableMethod("decreaseAllowance", [spender, subtractedValue], options);
@@ -105,6 +125,10 @@ export class ERC20Wrapper {
         } else {
             throw new Error("Transaction reverted");
         }
+    }
+    
+    public decreaseAllowance$txBuildDetails(spender: AddressLike, subtractedValue: QuantityLike): TransactionBuildDetails {
+        return this._contractInterface.encodeMutableMethod("decreaseAllowance", [spender, subtractedValue]);
     }
 
     public async findEvents(fromBlock: QuantityLike | BlockTag, toBlock: QuantityLike | BlockTag): Promise<ERC20EventCollection> {

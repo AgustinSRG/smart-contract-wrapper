@@ -1,6 +1,6 @@
-// Smart contract wrapper codegen
+// Smart contract wrapper code generation
 
-function generateWrappper(className, abi) {
+function generateWrapper(className, abi) {
     var result = {
         imports: {},
 
@@ -51,6 +51,7 @@ function generateWrappper(className, abi) {
     }
 
     result.imports["SmartContractInterface"] = true;
+    result.imports["TransactionBuildDetails"] = true;
     result.imports["AddressLike"] = true;
     result.imports["Address"] = true;
     result.imports["QuantityLike"] = true;
@@ -187,6 +188,14 @@ function makeDeployFunction(entry, result, className, tabSpaces) {
     lines.push('    } else {');
     lines.push('        throw new Error("Transaction reverted");');
     lines.push('    }');
+    lines.push('}');
+
+    lines.push('');
+
+    result.imports["getTxBuildDetailsForDeploy"] = true;
+
+    lines.push('public static getDeployTxBuildDetails(' + params.slice(0, params.length - 1).join(", ") + '): TransactionBuildDetails {');
+    lines.push('    return getTxBuildDetailsForDeploy(bytecode, CONTRACT_ABI, [' + getCallArgumentsList(entry) + '], ' + (entry.payable ? "value" : "0") + ');');
     lines.push('}');
 
     return lines.map(function (l) {
@@ -394,6 +403,18 @@ function makeTransactionFunction(entry, result, tabSpaces, className, isOverload
     lines.push('    } else {')
     lines.push('        throw new Error("Transaction reverted");');
     lines.push('    }');
+
+    lines.push('}');
+
+    lines.push('');
+
+    lines.push('public ' + methodName + '$txBuildDetails(' + params.slice(0, params.length - 1).join(", ") + '): TransactionBuildDetails {');
+
+    if (entry.payable) {
+        lines.push('    return this._contractInterface.encodePayableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], value);');
+    } else {
+        lines.push('    return this._contractInterface.encodeMutableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + ']);');
+    }
 
     lines.push('}');
 

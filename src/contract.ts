@@ -5,7 +5,7 @@
 import { Web3RPCClient } from "./rpc-client";
 import { normalizeABIResult, parseAddress, parseBytes } from "./utils";
 import { FunctionFragment, Interface } from "@ethersproject/abi";
-import { sendTransaction } from "./tx";
+import { TransactionBuildDetails, sendTransaction } from "./tx";
 import { interpretLog } from "./events";
 import { ABILike, Address, AddressLike, BlockTag, BytesLike, InputABIParams, MethodCallingOptions, MethodTransactionOptions, OutputABIParams, QuantityLike, RPCOptions, SmartContractEvent, TransactionLog, TransactionReceipt, TransactionResult, TransactionSendingOptions } from "./types";
 
@@ -19,6 +19,23 @@ import { ABILike, Address, AddressLike, BlockTag, BytesLike, InputABIParams, Met
  * @returns A result with the transaction receipt and the contract address
 */
 export async function deploySmartContract(byteCode: BytesLike, abi: ABILike, constructorParams: InputABIParams, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionResult<Address>> {
+    const receipt = await sendTransaction(getTxBuildDetailsForDeploy(byteCode, abi, constructorParams, value), options);
+
+    return {
+        receipt: receipt,
+        result: receipt.contractAddress,
+    };
+}
+
+/**
+ * Gets details to build a transaction to deploy a smart contract
+ * @param byteCode The byte code of the smart contract
+ * @param abi The ABI definition of the smart contract
+ * @param constructorParams The constructor params
+ * @param value The value to send to the constructor (wei)
+ * @returns The details to build the transaction
+ */
+export function getTxBuildDetailsForDeploy(byteCode: BytesLike, abi: ABILike, constructorParams: InputABIParams, value: QuantityLike): TransactionBuildDetails {
     const contractInterface = new Interface(abi);
 
     const byteCodeBuf = parseBytes(byteCode);
@@ -26,11 +43,10 @@ export async function deploySmartContract(byteCode: BytesLike, abi: ABILike, con
 
     const txData = Buffer.concat([byteCodeBuf, deployEncoded]);
 
-    const receipt = await sendTransaction(null, txData, value, options);
-
     return {
-        receipt: receipt,
-        result: receipt.contractAddress,
+        to: null,
+        data: txData,
+        value: value,
     };
 }
 
@@ -108,6 +124,21 @@ export class SmartContractInterface {
     }
 
     /**
+     * Encodes a mutable, non-payable method
+     * @param method The method name (must be in the ABI)
+     * @param params The parameters for the method
+     * @returns The details to build the transaction
+     */
+    public encodeMutableMethod(method: string | FunctionFragment, params: InputABIParams): TransactionBuildDetails {
+        const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
+        return {
+            to: this.address,
+            data: txDataHexString,
+            value: 0,
+        };
+    }
+
+    /**
      * Calls a mutable, payable method
      * This sends a transaction
      * @param method The method name (must be in the ABI)
@@ -122,6 +153,22 @@ export class SmartContractInterface {
         return {
             receipt: receipt,
             result: null,
+        };
+    }
+
+    /**
+     * Encodes a mutable, payable method
+     * @param method The method name (must be in the ABI)
+     * @param params The parameters for the method
+     * @param value The value to send (wei)
+     * @returns The details to build the transaction
+     */
+    public encodePayableMethod(method: string | FunctionFragment, params: InputABIParams, value: QuantityLike): TransactionBuildDetails {
+        const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
+        return {
+            to: this.address,
+            data: txDataHexString,
+            value: value,
         };
     }
 

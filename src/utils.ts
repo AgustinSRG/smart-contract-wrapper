@@ -84,6 +84,8 @@ export function parseBytes(b: BytesLike): Bytes {
         return Buffer.from(hexNoPrefix(b), "hex");
     } else if (b instanceof Buffer) {
         return b;
+    } else if (b instanceof Uint8Array) {
+        return Buffer.from(b);
     } else {
         return Buffer.from(new Uint8Array([])); // Empty buffer
     }
@@ -153,6 +155,8 @@ export function toHex(b: InputParam): string {
         return hexWithPrefix(b);
     } else if (b instanceof Buffer) {
         return hexWithPrefix(b.toString("hex"));
+    } else if (b instanceof Uint8Array) {
+        return hexWithPrefix(Buffer.from(b).toString("hex"));
     } else {
         return undefined;
     }

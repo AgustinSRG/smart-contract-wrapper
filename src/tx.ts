@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { FeeMarketEIP1559TxData, FeeMarketEIP1559Transaction, TxData, Transaction } from '@ethereumjs/tx';
+import { FeeMarketEIP1559TxData, FeeMarketEIP1559Transaction, LegacyTxData, LegacyTransaction } from '@ethereumjs/tx';
 import { Common } from '@ethereumjs/common';
 import { Web3RPCClient } from './rpc-client';
 import { parseAddress, parseBytes, parseQuantity, toHex } from './utils';
@@ -15,6 +15,26 @@ const NonceCollisionErrorMessages = [
 ];
 
 /**
+ * Details for building a transaction
+ */
+export interface TransactionBuildDetails {
+    /**
+     * Transaction destination address
+     */
+    to: AddressLike | null;
+
+    /**
+     * Transaction data
+     */
+    data: BytesLike;
+
+    /**
+     * Transaction value
+     */
+    value: QuantityLike;
+}
+
+/**
  * Sends a transaction
  * @param to Destination address
  * @param data Data
@@ -22,7 +42,26 @@ const NonceCollisionErrorMessages = [
  * @param options RPC options
  * @returns The transaction receipt
  */
-export async function sendTransaction(to: AddressLike, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
+export function sendTransaction(to: AddressLike | null, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt>;
+
+/**
+ * Sends a transaction
+ * @param details The transaction build details
+ * @param options RPC options
+ * @returns The transaction receipt
+ */
+export function sendTransaction(details: TransactionBuildDetails, options: TransactionSendingOptions): Promise<TransactionReceipt>;
+
+
+export function sendTransaction(toOrDetails: AddressLike | null | TransactionBuildDetails, dataOrOptions: BytesLike | TransactionSendingOptions, value?: QuantityLike, options?: TransactionSendingOptions): Promise<TransactionReceipt> {
+    if (typeof toOrDetails === "object" && toOrDetails !== null) {
+        return sendTransactionInternal(toOrDetails.to, toOrDetails.data, toOrDetails.value, dataOrOptions as TransactionSendingOptions);
+    } else {
+        return sendTransactionInternal(toOrDetails as AddressLike, dataOrOptions as BytesLike, value, options);
+    }
+}
+
+async function sendTransactionInternal(to: AddressLike | null, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions) {
     let receipt: TransactionReceipt;
     while (!receipt) {
         try {
@@ -242,7 +281,7 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
 
     // Build transaction
 
-    const txData: TxData = {
+    const txData: LegacyTxData = {
         nonce: nonceHex,
         gasLimit: gasLimitHex,
         gasPrice: gasPriceHex,
@@ -264,7 +303,7 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
         options.logFunction(`Transaction data: ${JSON.stringify(txData)}`);
     }
 
-    let tx = new Transaction(txData, { common: customCommon });
+    let tx = new LegacyTransaction(txData, { common: customCommon });
 
     // Sign transaction
     if (options.logFunction) {
@@ -278,7 +317,7 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
     return sendSerializedTransaction(serializedTx, options);
 }
 
-async function sendSerializedTransaction(serializedTx: Buffer, options: TransactionSendingOptions): Promise<TransactionReceipt> {
+async function sendSerializedTransaction(serializedTx: BytesLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
     // Send transaction
     if (options.logFunction) {
         options.logFunction(`Sending transaction...`);
