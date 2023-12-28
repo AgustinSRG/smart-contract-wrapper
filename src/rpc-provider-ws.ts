@@ -30,7 +30,7 @@ interface PendingRequest {
     reject: (err: Error) => void;
 }
 
-export declare interface RPC_WebSocket_Provider {
+export declare interface I_RPC_WebSocket_Provider {
     /**
      * Error event, emitted for connection errors
      */
@@ -40,7 +40,7 @@ export declare interface RPC_WebSocket_Provider {
 /**
  * HTTP provider for JSON-RPC requests
  */
-export class RPC_WebSocket_Provider extends EventEmitter implements RPCProvider {
+export class RPC_WebSocket_Provider extends EventEmitter implements RPCProvider, I_RPC_WebSocket_Provider {
     public url: URL;
 
     private internalID: number;

@@ -42,7 +42,7 @@ window.App = new Vue({
 
             if (Array.isArray(inputABI)) {
                 try {
-                    this.outputText = generateWrappper(this.contractName.replace(/\s\t/g, "_"), inputABI);
+                    this.outputText = generateWrapper(this.contractName.replace(/\s\t/g, "_"), inputABI);
                 } catch (e) {
                     console.error(e);
                     this.outputText = "Invalid ABI";

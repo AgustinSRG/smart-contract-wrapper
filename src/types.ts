@@ -37,7 +37,7 @@ export type QuantityLike = string | number | bigint;
 /**
  * Can be parsed into an array of bytes
  */
-export type BytesLike = string | Buffer;
+export type BytesLike = string | Buffer | Uint8Array;
 
 /**
  * Input parameter
