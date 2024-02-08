@@ -1,6 +1,6 @@
 {
   "name": "@asanrom/smart-contract-wrapper",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Typescript wrapper for smart contract interaction.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

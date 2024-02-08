@@ -359,7 +359,7 @@ async function sendSerializedTransaction(serializedTx: BytesLike, accountAddress
 
             // Check nonce
             const nonceFromRPC = await Web3RPCClient.getInstance().getTransactionCount(accountAddress, "latest", options);
-            if (nonceFromRPC >= nonce) {
+            if (nonceFromRPC > nonce) {
                 nonceChanged = true;
                 continue;
             }
