@@ -14,7 +14,7 @@
     "compile": "tsc --pretty --declaration",
     "build": "rimraf dist && npm run compile",
     "lint": "eslint --fix src/**/*.ts",
-    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -b -r ts-node/register 'tests/**/*.ts'",
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha --exit -b -r ts-node/register 'tests/**/*.ts'",
     "gendoc": "typedoc --out docs ./src"
   },
   "files": [
