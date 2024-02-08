@@ -159,13 +159,16 @@ async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value:
 
     const gasLimitHex = toHex(options.gasLimit === undefined ? recommendedGasLimit : options.gasLimit);
 
+    let nonce: bigint;
     let nonceHex: string;
 
     if (options.nonce === undefined) {
         const nonceFromRPC = await Web3RPCClient.getInstance().getTransactionCount(accountAddress, "pending", options);
         nonceHex = toHex(nonceFromRPC);
+        nonce = nonceFromRPC;
     } else {
         nonceHex = toHex(options.nonce);
+        nonce = BigInt(nonceHex);
     }
 
 
@@ -206,7 +209,7 @@ async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value:
     // Serialize transaction
     const serializedTx = tx.serialize();
 
-    return sendSerializedTransaction(serializedTx, options);
+    return sendSerializedTransaction(serializedTx, accountAddress, nonce, options);
 }
 
 async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
@@ -270,13 +273,16 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
     const gasPriceHex = toHex(options.gasPrice === undefined ? recommendedGasPrice : options.gasPrice);
     const gasLimitHex = toHex(options.gasLimit === undefined ? recommendedGasLimit : options.gasLimit);
 
+    let nonce: bigint;
     let nonceHex: string;
 
     if (options.nonce === undefined) {
         const nonceFromRPC = await Web3RPCClient.getInstance().getTransactionCount(accountAddress, "pending", options);
+        nonce = nonceFromRPC;
         nonceHex = toHex(nonceFromRPC);
     } else {
         nonceHex = toHex(options.nonce);
+        nonce = BigInt(nonceHex);
     }
 
     // Build transaction
@@ -314,10 +320,10 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
     // Serialize transaction
     const serializedTx = tx.serialize();
 
-    return sendSerializedTransaction(serializedTx, options);
+    return sendSerializedTransaction(serializedTx, accountAddress, nonce, options);
 }
 
-async function sendSerializedTransaction(serializedTx: BytesLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
+async function sendSerializedTransaction(serializedTx: BytesLike, accountAddress: string, nonce: bigint, options: TransactionSendingOptions): Promise<TransactionReceipt> {
     // Send transaction
     if (options.logFunction) {
         options.logFunction(`Sending transaction...`);
@@ -331,11 +337,16 @@ async function sendSerializedTransaction(serializedTx: BytesLike, options: Trans
     }
     const startTime = Date.now();
     let receipt: TransactionReceipt;
+    let nonceChanged = false;
 
     while (!receipt) {
         receipt = await Web3RPCClient.getInstance().getTransactionReceipt(txHash, options);
 
         if (!receipt) {
+            if (nonceChanged) {
+                throw new Error(NonceCollisionErrorMessages[0]);
+            }
+
             // Wait 1 second and try fetching the receipt again
             await (new Promise(function (resolve2) {
                 setTimeout(resolve2, 1000);
@@ -344,6 +355,13 @@ async function sendSerializedTransaction(serializedTx: BytesLike, options: Trans
             // Check timeout
             if (options.receiptWaitTimeout !== undefined && options.receiptWaitTimeout > 0 && (Date.now() - startTime > options.receiptWaitTimeout)) {
                 throw new Error("Timed out after " + options.receiptWaitTimeout + " milliseconds.");
+            }
+
+            // Check nonce
+            const nonceFromRPC = await Web3RPCClient.getInstance().getTransactionCount(accountAddress, "latest", options);
+            if (nonceFromRPC >= nonce) {
+                nonceChanged = true;
+                continue;
             }
         } else {
             if (options.logFunction) {
