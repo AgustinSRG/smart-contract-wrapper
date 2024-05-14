@@ -343,17 +343,17 @@ function makeViewFunction(entry, result, tabSpaces, isOverloaded, overloadedMeth
 
     lines.push('public async ' + methodName + '(' + params.join(", ") + '): Promise<' + makeFunctionResultType(entry.outputs, outType, result) + '> {');
 
-    lines.push('    ' + (outType === "void" ? "" : 'const result: any = ') + 'await this._contractInterface.callViewMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], options || {});');
+    lines.push('    ' + (outType === "void" ? "" : 'const __r: any = ') + 'await this._contractInterface.callViewMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], options || {});');
 
     if (outType === "single") {
-        lines.push('    return result[0]');
+        lines.push('    return __r[0]');
     } else if (outType === "tuple") {
-        lines.push('    return result');
+        lines.push('    return __r');
     } else if (outType === "struct") {
         lines.push('    return {');
         for (var i = 0; i < entry.outputs.length; i++) {
             var out = entry.outputs[i];
-            lines.push('        ' + out.name + ': result[' + i + ']' + ',');
+            lines.push('        ' + out.name + ': __r[' + i + ']' + ',');
         }
         lines.push('    };');
     }
@@ -394,16 +394,16 @@ function makeTransactionFunction(entry, result, tabSpaces, className, isOverload
     lines.push('public async ' + methodName + '(' + params.join(", ") + '): Promise<TransactionResult<' + resultName + '>> {');
 
     if (entry.payable) {
-        lines.push('    const result = await this._contractInterface.callPayableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], value, options);');
+        lines.push('    const __r = await this._contractInterface.callPayableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], value, options);');
     } else {
-        lines.push('    const result = await this._contractInterface.callMutableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], options);');
+        lines.push('    const __r = await this._contractInterface.callMutableMethod(' + sanitizeMethodEntry(entry, isOverloaded) + ', [' + getCallArgumentsList(entry) + '], options);');
     }
 
     lines.push('');
 
-    lines.push('    if (result.receipt.status > BigInt(0)) {');
-    lines.push('        const decodedEvents = this._contractInterface.parseTransactionLogs(result.receipt.logs)');
-    lines.push('        return { receipt: result.receipt, result: new ' + resultName + '(decodedEvents) };');
+    lines.push('    if (__r.receipt.status > BigInt(0)) {');
+    lines.push('        const decodedEvents = this._contractInterface.parseTransactionLogs(__r.receipt.logs)');
+    lines.push('        return { receipt: __r.receipt, result: new ' + resultName + '(decodedEvents) };');
     lines.push('    } else {')
     lines.push('        throw new Error("Transaction reverted");');
     lines.push('    }');
@@ -454,14 +454,14 @@ function makeEventFunc(entry, result, tabSpaces) {
     lines.push('public get' + entry.name + 'Event(index: number): SmartContractEventWrapper<' + entry.name + 'Event> {');
 
 
-    lines.push('    const result: any = this.events[index].parameters;');
+    lines.push('    const __r: any = this.events[index].parameters;');
     lines.push('    return {');
     lines.push('        event: this.events[index],');
     lines.push('        data: {');
 
     for (var i = 0; i < entry.inputs.length; i++) {
         var out = entry.inputs[i];
-        lines.push('            ' + out.name + ': result[' + i + ']' + ',');
+        lines.push('            ' + out.name + ': __r[' + i + ']' + ',');
     }
 
     lines.push('        },');

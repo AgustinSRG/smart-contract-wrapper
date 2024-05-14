@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ethereum test node
-      uses: AgustinSRG/eth-test-node-action@v3
+      uses: AgustinSRG/eth-test-node-action@v5
       with:
         rpcPort: 8545
         gethVersion: alltools-latest
@@ -28,10 +28,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
    
-    - name: npm install, build and test
-      run: |
-        npm install
-        npm run build
-        npm test
-      env:
-        CI: true
+    - run: npm install
+    - run: npm run build --if-present
+    - run: npm test
