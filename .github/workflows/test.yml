@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set up Ethereum test node
-      uses: AgustinSRG/eth-test-node-action@v3
+      uses: AgustinSRG/eth-test-node-action@v5
       with:
         rpcPort: 8545
         gethVersion: alltools-latest
