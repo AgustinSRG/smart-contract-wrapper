@@ -9,8 +9,8 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
-    "@node-minify/clean-css": "^6.2.0",
-    "@node-minify/core": "^6.2.0",
-    "@node-minify/uglify-js": "^6.2.0"
+    "@node-minify/clean-css": "8.0.6",
+    "@node-minify/core": "8.0.6",
+    "@node-minify/uglify-js": "8.0.6"
   }
 }
