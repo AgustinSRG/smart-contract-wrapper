@@ -1,6 +1,6 @@
 {
   "name": "@asanrom/smart-contract-wrapper",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "Typescript wrapper for smart contract interaction.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -55,6 +55,6 @@
     "@ethersproject/address": "5.7.0",
     "@ethersproject/bignumber": "5.7.0",
     "ethereum-cryptography": "2.1.2",
-    "ws": "8.16.0"
+    "ws": "8.17.1"
   }
 }
