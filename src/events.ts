@@ -2,9 +2,8 @@
 
 "use strict"
 
-import { JsonFragment, Result } from "@ethersproject/abi";
+import { JsonFragment, Result, Interface } from "./ethers-abi/abi";
 import { keccak256 } from 'ethereum-cryptography/keccak';
-import { Interface } from "@ethersproject/abi";
 import { normalizeABIResult, toHex } from "./utils";
 import { ABILike, SmartContractEvent, TransactionLog } from "./types";
 

@@ -4,7 +4,7 @@
 
 import { Web3RPCClient } from "./rpc-client";
 import { normalizeABIResult, parseAddress, parseBytes } from "./utils";
-import { FunctionFragment, Interface } from "@ethersproject/abi";
+import { FunctionFragment, Interface } from "./ethers-abi/abi";
 import { TransactionBuildDetails, sendTransaction } from "./tx";
 import { interpretLog } from "./events";
 import { ABILike, Address, AddressLike, BlockTag, BytesLike, InputABIParams, MethodCallingOptions, MethodTransactionOptions, OutputABIParams, QuantityLike, RPCOptions, SmartContractEvent, TransactionLog, TransactionReceipt, TransactionResult, TransactionSendingOptions } from "./types";

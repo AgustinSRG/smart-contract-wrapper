@@ -5,7 +5,7 @@
 import { FeeMarketEIP1559TxData, FeeMarketEIP1559Transaction, LegacyTxData, LegacyTransaction } from '@ethereumjs/tx';
 import { Common } from '@ethereumjs/common';
 import { Web3RPCClient } from './rpc-client';
-import { parseAddress, parseBytes, parseQuantity, toHex } from './utils';
+import { bigintsToHex, parseAddress, parseBytes, parseQuantity, toHex } from './utils';
 import { privateKeyToAddress } from './account';
 import { AddressLike, BytesLike, QuantityLike, TransactionReceipt, TransactionSendingOptions } from './types';
 
@@ -95,7 +95,7 @@ async function sendTransactionInternal(to: AddressLike | null, data: BytesLike, 
 }
 
 async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
-    let chainId = options.chainId;
+    let chainId: bigint = options.chainId === undefined ? undefined : parseQuantity(options.chainId);
 
     if (chainId === undefined) {
         chainId = await Web3RPCClient.getInstance().getNetworkId(options);
@@ -104,8 +104,8 @@ async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value:
     const customCommon = Common.custom(
         {
             name: 'my-network',
-            networkId: parseQuantity(chainId),
-            chainId: parseQuantity(chainId),
+            networkId: chainId,
+            chainId: chainId,
         },
         {
             baseChain: "mainnet",
@@ -154,10 +154,10 @@ async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value:
         }
     }
 
-    const maxFeePerGas = toHex(options.maxFeePerGas === undefined ? recommendedMaxPriorityFeePerGas : options.maxFeePerGas);
-    const maxPriorityFeePerGas = toHex(options.maxPriorityFeePerGas === undefined ? 0 : options.maxPriorityFeePerGas);
+    const maxFeePerGas = options.maxFeePerGas === undefined ? recommendedMaxPriorityFeePerGas : parseQuantity(options.maxFeePerGas);
+    const maxPriorityFeePerGas = options.maxPriorityFeePerGas === undefined ? 0 : parseQuantity(options.maxPriorityFeePerGas);
 
-    const gasLimitHex = toHex(options.gasLimit === undefined ? recommendedGasLimit : options.gasLimit);
+    const gasLimit = options.gasLimit === undefined ? recommendedGasLimit : parseQuantity(options.gasLimit);
 
     let nonce: bigint;
     let nonceHex: string;
@@ -175,27 +175,27 @@ async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value:
     // Build transaction
 
     const txData: FeeMarketEIP1559TxData = {
-        nonce: nonceHex,
-        gasLimit: gasLimitHex,
-        chainId: toHex(chainId),
+        nonce: nonce,
+        gasLimit: gasLimit,
+        chainId: chainId,
         maxFeePerGas: maxFeePerGas,
         maxPriorityFeePerGas: maxPriorityFeePerGas,
     };
 
     if (to) {
-        txData.to = parseAddress(to);
+        txData.to = parseAddress(to) as any;
     }
 
     if (data) {
-        txData.data = toHex(data);
+        txData.data = toHex(data) as any;
     }
 
     if (value) {
-        txData.value = toHex(value);
+        txData.value = parseQuantity(value);
     }
 
     if (options.logFunction) {
-        options.logFunction(`Transaction data: ${JSON.stringify(txData)}`);
+        options.logFunction(`Transaction data: ${JSON.stringify(bigintsToHex(txData))}`);
     }
 
     let tx = new FeeMarketEIP1559Transaction(txData, { common: customCommon });
@@ -213,7 +213,7 @@ async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value:
 }
 
 async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions): Promise<TransactionReceipt> {
-    let chainId = options.chainId;
+    let chainId: bigint = options.chainId === undefined ? undefined : parseQuantity(options.chainId);
 
     if (chainId === undefined) {
         chainId = await Web3RPCClient.getInstance().getNetworkId(options);
@@ -222,8 +222,8 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
     const customCommon = Common.custom(
         {
             name: 'my-network',
-            networkId: parseQuantity(chainId),
-            chainId: parseQuantity(chainId),
+            networkId: chainId,
+            chainId: chainId,
         },
         {
             baseChain: "mainnet",
@@ -270,8 +270,8 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
         }
     }
 
-    const gasPriceHex = toHex(options.gasPrice === undefined ? recommendedGasPrice : options.gasPrice);
-    const gasLimitHex = toHex(options.gasLimit === undefined ? recommendedGasLimit : options.gasLimit);
+    const gasPrice = options.gasPrice === undefined ? recommendedGasPrice : parseQuantity(options.gasPrice);
+    const gasLimit = options.gasLimit === undefined ? recommendedGasLimit : parseQuantity(options.gasLimit);
 
     let nonce: bigint;
     let nonceHex: string;
@@ -288,25 +288,25 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
     // Build transaction
 
     const txData: LegacyTxData = {
-        nonce: nonceHex,
-        gasLimit: gasLimitHex,
-        gasPrice: gasPriceHex,
+        nonce: nonce,
+        gasLimit: gasLimit,
+        gasPrice: gasPrice,
     };
 
     if (to) {
-        txData.to = parseAddress(to);
+        txData.to = parseAddress(to) as any;
     }
 
     if (data) {
-        txData.data = toHex(data);
+        txData.data = toHex(data) as any;
     }
 
     if (value) {
-        txData.value = toHex(value);
+        txData.value = parseQuantity(value);
     }
 
     if (options.logFunction) {
-        options.logFunction(`Transaction data: ${JSON.stringify(txData)}`);
+        options.logFunction(`Transaction data: ${JSON.stringify(bigintsToHex(txData))}`);
     }
 
     let tx = new LegacyTransaction(txData, { common: customCommon });

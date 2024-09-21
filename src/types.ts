@@ -2,7 +2,7 @@
 
 "use strict";
 
-import { JsonFragment } from "@ethersproject/abi";
+import { JsonFragment } from "./ethers-abi/abi";
 
 /**
  * Block tag
