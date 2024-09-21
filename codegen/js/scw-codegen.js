@@ -32,10 +32,13 @@ function generateWrapper(className, abi, omitDetailsFuncs) {
         }
     }
 
+    var hasConstructorEntry = false;
+
     for (var i = 0; i < abi.length; i++) {
         var entry = abi[i];
 
         if (entry.type === "constructor") {
+            hasConstructorEntry = true;
             result.deployFn = makeDeployFunction(entry, result, wrapperName, "    ", omitDetailsFuncs);
         } else if (entry.type === "function") {
             if (entry.stateMutability === "view" || entry.stateMutability === "pure") {
@@ -48,6 +51,14 @@ function generateWrapper(className, abi, omitDetailsFuncs) {
             result.eventStruct.push(makeEventStruct(entry, result, ""));
             result.eventFn.push(makeEventFunc(entry, result, "    "));
         }
+    }
+
+    if (!hasConstructorEntry) {
+        result.deployFn = makeDeployFunction({
+            "inputs": [],
+            "stateMutability": "nonpayable",
+            "type": "constructor"
+        }, result, wrapperName, "    ", omitDetailsFuncs);
     }
 
     result.imports["SmartContractInterface"] = true;
