@@ -2,9 +2,8 @@
 
 "use strict"
 
-import { Result } from "@ethersproject/abi";
+import { Result } from "./ethers-abi/abi";
 import { Address, AddressLike, Bytes, BytesLike, InputParam, OutputABIParam, OutputABIParams, Quantity, QuantityLike } from "./types";
-import { BigNumber } from "@ethersproject/bignumber";
 
 /**
  * Parses address from RPC result
@@ -198,19 +197,48 @@ export function hexNoPrefix(hex: string) {
  * @returns Normalized ABI result
  */
 export function normalizeABIResult(i: Result): OutputABIParams {
+    return normalizeABIResultInternal(i.toArray());
+}
+
+function normalizeABIResultInternal(i: unknown[]): OutputABIParams {
     const r = [];
 
     for (const b of i) {
         if (b instanceof Uint8Array) {
             r.push(Buffer.from(b));
-        } else if (b instanceof BigNumber) {
-            r.push(b.toBigInt());
+        } else if (typeof b === "bigint") {
+            r.push(b);
         } else if (Array.isArray(b)) {
-            r.push(normalizeABIResult(b));
+            r.push(normalizeABIResultInternal(b));
         } else {
             r.push(b);
         }
     }
 
     return r;
+}
+
+/**
+ * Turns bigint elements into hex strings to allow for JSON serialization
+ * @param o The object
+ * @returns The same object, but all the bigints turned into hex strings with 0x prefix
+ */
+export function bigintsToHex(o: unknown): unknown {
+    if (typeof o === "bigint") {
+        return "0x" + o.toString(16);
+    } else if (typeof o !== "object" || o === null) {
+        return o;
+    }
+
+    if (Array.isArray(o)) {
+        return o.map(bigintsToHex);
+    } else {
+        const r = Object.create(null);
+
+        for (const k of Object.keys(o)) {
+            r[k] = bigintsToHex(o[k]);
+        }
+
+        return r;
+    }
 }
