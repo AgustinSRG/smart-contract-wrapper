@@ -491,5 +491,5 @@ function sanitizeMethodEntry(entry, isOverloaded) {
         return JSON.stringify(entry.name);
     }
 
-    return "FunctionFragment.fromObject(" + JSON.stringify(entry) + ")";
+    return "FunctionFragment.from(" + JSON.stringify(entry) + ")";
 }
