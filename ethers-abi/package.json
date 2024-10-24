@@ -1,7 +1,7 @@
 {
-  "name": "@asanrom/smart-contract-wrapper",
-  "version": "5.2.0",
-  "description": "Typescript wrapper for smart contract interaction.",
+  "name": "@asanrom/ethers-abi",
+  "version": "1.0.0",
+  "description": "Ethereum ABI tools.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "homepage": "https://github.com/AgustinSRG/smart-contract-wrapper",
@@ -32,13 +32,10 @@
     "lint"
   ],
   "devDependencies": {
-    "@types/chai": "4.3.11",
     "@types/mocha": "10.0.6",
     "@types/node": "20.10.5",
-    "@types/ws": "8.5.10",
     "@typescript-eslint/eslint-plugin": "6.16.0",
     "@typescript-eslint/parser": "6.16.0",
-    "chai": "4.3.10",
     "eslint": "8.56.0",
     "mocha": "10.2.0",
     "rimraf": "5.0.5",
@@ -49,10 +46,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@asanrom/ethers-abi": "1.0.0",
-    "@ethereumjs/common": "4.4.0",
-    "@ethereumjs/tx": "5.4.0",
-    "ethereum-cryptography": "2.2.1",
-    "ws": "8.18.0"
+    "ethereum-cryptography": "2.2.1"
   }
 }

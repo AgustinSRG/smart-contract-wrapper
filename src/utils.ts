@@ -2,7 +2,7 @@
 
 "use strict"
 
-import { Result } from "./ethers-abi/abi";
+import { Result } from "@asanrom/ethers-abi";
 import { Address, AddressLike, Bytes, BytesLike, InputParam, OutputABIParam, OutputABIParams, Quantity, QuantityLike } from "./types";
 
 /**
