@@ -11,4 +11,4 @@ export * from "./events";
 export * from "./contract";
 export * from "./rpc-provider-http";
 export * from "./rpc-provider-ws";
-export { FunctionFragment } from "./ethers-abi/abi";
+export * from "./ethers-abi/abi";
