@@ -220,7 +220,7 @@ function makeDeployFunction(entry, result, className, tabSpaces, omitDetailsFunc
 
 function makeFunctionParams(inputs, result) {
     return inputs.map(function (i, j) {
-        return (i.name || ("param_" + j)) + ": " + getABITypescriptType(i.type, result, true);
+        return (i.name || ("param_" + j)) + ": " + getABITypescriptType(i, result, true);
     });
 }
 
@@ -228,8 +228,8 @@ function getCallArgumentsList(entry) {
     return entry.inputs.map(function (i, j) { return i.name || "param_" + j; }).join(", ");
 }
 
-function getABITypescriptType(abiType, result, isInput) {
-    abiType = abiType + "";
+function getABITypescriptType(abi, result, isInput) {
+    let abiType = abi.type + "";
     var matchArray = (/\[([0-9]+)?\]$/).exec(abiType);
     var isArray;
 
@@ -267,38 +267,11 @@ function getABITypescriptType(abiType, result, isInput) {
         } else {
             return "string" + (isArray ? "[]" : "");
         }
-    } else if ((/^\(.*\)$/).test(abiType)) {
+    } else if (abiType === "tuple" && abi.components) {
         // Tuple
-        var innerText = abiType.substr(1, abiType.length - 1)
-        var tName = "";
-        var openTupleCount = 0;
-
-        var typeArray = [];
-
-        for (var i = 0; i < innerText.length; i++) {
-            var c = innerText.charAt(i);
-
-            if (c === "(") {
-                tName += c;
-                openTupleCount++;
-            } else if (c === ")") {
-                tName += c;
-                openTupleCount--;
-            } else if (c === "," && openTupleCount === 0) {
-                typeArray.push(tName);
-                tName = "";
-            } else {
-                tName += c;
-            }
-        }
-
-        if (tName) {
-            typeArray.push(tName);
-        }
-
-        return "[" + typeArray.map(function (t) {
-            return getABITypescriptType(t, result, isInput);
-        }).join(", ") + "]";
+        return "[" + abi.components.map(function (t, i) {
+            return (t.name || "t_" + i) + ": " + getABITypescriptType(t, result, isInput);
+        }).join(", ") + "]" + (isArray ? "[]" : "");
     }
 }
 
@@ -306,14 +279,14 @@ function makeFunctionResultType(outputs, outType, result) {
     if (outType === "void") {
         return "void";
     } else if (outType === "single") {
-        return getABITypescriptType(outputs[0].type, result, false);
+        return getABITypescriptType(outputs[0], result, false);
     } else if (outType === "tuple") {
         return "[" + outputs.map(function (o) {
-            return getABITypescriptType(o.type, result, false);
+            return getABITypescriptType(o, result, false);
         }).join(", ") + "]";
     } else if (outType === "struct") {
         return "{" + outputs.map(function (o) {
-            return o.name + ": " + getABITypescriptType(o.type, result, false);
+            return o.name + ": " + getABITypescriptType(o, result, false);
         }).join(", ") + "}";
     } else {
         return "any";
@@ -447,7 +420,7 @@ function makeEventStruct(entry, result, tabSpaces) {
 
     for (var i = 0; i < entry.inputs.length; i++) {
         var out = entry.inputs[i];
-        lines.push('    ' + (out.name || ("_" + i)) + ': ' + getABITypescriptType(out.type, result, false) + ",");
+        lines.push('    ' + (out.name || ("_" + i)) + ': ' + getABITypescriptType(out, result, false) + ",");
     }
 
     lines.push('}');
