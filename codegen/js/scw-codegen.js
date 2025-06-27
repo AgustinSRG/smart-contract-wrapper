@@ -39,7 +39,7 @@ function generateWrapper(className, abi, omitDetailsFuncs) {
 
         if (entry.type === "constructor") {
             hasConstructorEntry = true;
-            result.deployFn = makeDeployFunction(entry, result, wrapperName, "    ", omitDetailsFuncs);
+            result.deployFn = makeDeployFunction(entry, result, className, "    ", omitDetailsFuncs);
         } else if (entry.type === "function") {
             if (entry.stateMutability === "view" || entry.stateMutability === "pure") {
                 result.viewFn.push(makeViewFunction(entry, result, "    ", overloadedMethods[entry.name], overloadedMethodsIndex));
@@ -194,10 +194,10 @@ function makeDeployFunction(entry, result, className, tabSpaces, omitDetailsFunc
 
     result.imports["deploySmartContract"] = true;
 
-    lines.push('public static async deploy(' + params.join(", ") + '): Promise<' + className + '> {');
+    lines.push('public static async deploy(' + params.join(", ") + '): Promise<' + className + 'Wrapper> {');
     lines.push('    const deployed = await deploySmartContract(bytecode, ' + className + '_ABI, [' + getCallArgumentsList(entry) + '], ' + (entry.payable ? "value" : "0") + ', options);');
     lines.push('    if (deployed.receipt.status > BigInt(0)) {');
-    lines.push('        return new ' + className + '(deployed.result, options);');
+    lines.push('        return new ' + className + 'Wrapper(deployed.result, options);');
     lines.push('    } else {');
     lines.push('        throw new Error("Transaction reverted");');
     lines.push('    }');
