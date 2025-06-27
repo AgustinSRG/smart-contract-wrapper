@@ -136,21 +136,15 @@ async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value:
     let recommendedGasLimit = BigInt(6000000);
 
     if (options.gasLimit === undefined) {
-        try {
-            recommendedGasLimit = await Web3RPCClient.getInstance().estimateGas({
-                to: to,
-                from: accountAddress,
-                data: data,
-                value: value,
-            }, "pending", options);
-            
-            if (options.logFunction) {
-                options.logFunction(`Recommended gas limit of the transaction: ${toHex(recommendedGasLimit)} wei`);
-            }
-        } catch (ex) {
-            if (options.logFunction) {
-                options.logFunction(`Could not fetch the recommended gas limit. Error: ${ex.message}`);
-            }
+        recommendedGasLimit = await Web3RPCClient.getInstance().estimateGas({
+            to: to,
+            from: accountAddress,
+            data: data,
+            value: value,
+        }, "pending", options);
+
+        if (options.logFunction) {
+            options.logFunction(`Recommended gas limit of the transaction: ${toHex(recommendedGasLimit)} wei`);
         }
     }
 
@@ -252,21 +246,15 @@ async function sendGasPriceTransaction(to: AddressLike, data: BytesLike, value: 
     let recommendedGasLimit = BigInt(6000000);
 
     if (options.gasLimit === undefined) {
-        try {
-            recommendedGasLimit = await Web3RPCClient.getInstance().estimateGas({
-                to: to,
-                from: accountAddress,
-                data: data,
-                value: value,
-            }, "pending", options);
-            
-            if (options.logFunction) {
-                options.logFunction(`Recommended gas limit of the transaction: ${toHex(recommendedGasLimit)} wei`);
-            }
-        } catch (ex) {
-            if (options.logFunction) {
-                options.logFunction(`Could not fetch the recommended gas limit. Error: ${ex.message}`);
-            }
+        recommendedGasLimit = await Web3RPCClient.getInstance().estimateGas({
+            to: to,
+            from: accountAddress,
+            data: data,
+            value: value,
+        }, "pending", options);
+
+        if (options.logFunction) {
+            options.logFunction(`Recommended gas limit of the transaction: ${toHex(recommendedGasLimit)} wei`);
         }
     }
 

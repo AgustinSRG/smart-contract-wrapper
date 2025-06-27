@@ -99,7 +99,7 @@ function generateWrapper(className, abi, omitDetailsFuncs) {
     lines.push('');
 
     lines.push('    constructor(address: AddressLike, rpcOptions: RPCOptions) {');
-    lines.push('        this._contractInterface = new SmartContractInterface(address, CONTRACT_ABI, rpcOptions);');
+    lines.push('        this._contractInterface = new SmartContractInterface(address, ' + className + '_ABI, rpcOptions);');
     lines.push('        this.address = this._contractInterface.address;');
     lines.push('    }');
 
@@ -171,7 +171,7 @@ function generateWrapper(className, abi, omitDetailsFuncs) {
 
     lines.push('');
 
-    lines.push('const CONTRACT_ABI: ABILike = ' + JSON.stringify(abi, null, "    ") + ";")
+    lines.push('export const ' + className + '_ABI: ABILike = ' + JSON.stringify(abi, null, "    ") + ";")
 
     return lines.join("\n") + "\n";
 }
@@ -195,7 +195,7 @@ function makeDeployFunction(entry, result, className, tabSpaces, omitDetailsFunc
     result.imports["deploySmartContract"] = true;
 
     lines.push('public static async deploy(' + params.join(", ") + '): Promise<' + className + '> {');
-    lines.push('    const deployed = await deploySmartContract(bytecode, CONTRACT_ABI, [' + getCallArgumentsList(entry) + '], ' + (entry.payable ? "value" : "0") + ', options);');
+    lines.push('    const deployed = await deploySmartContract(bytecode, ' + className + '_ABI, [' + getCallArgumentsList(entry) + '], ' + (entry.payable ? "value" : "0") + ', options);');
     lines.push('    if (deployed.receipt.status > BigInt(0)) {');
     lines.push('        return new ' + className + '(deployed.result, options);');
     lines.push('    } else {');
@@ -209,7 +209,7 @@ function makeDeployFunction(entry, result, className, tabSpaces, omitDetailsFunc
         result.imports["getTxBuildDetailsForDeploy"] = true;
 
         lines.push('public static getDeployTxBuildDetails(' + params.slice(0, params.length - 1).join(", ") + '): TransactionBuildDetails {');
-        lines.push('    return getTxBuildDetailsForDeploy(bytecode, CONTRACT_ABI, [' + getCallArgumentsList(entry) + '], ' + (entry.payable ? "value" : "0") + ');');
+        lines.push('    return getTxBuildDetailsForDeploy(bytecode, ' + className + '_ABI, [' + getCallArgumentsList(entry) + '], ' + (entry.payable ? "value" : "0") + ');');
         lines.push('}');
     }
 
