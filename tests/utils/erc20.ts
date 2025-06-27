@@ -9,7 +9,7 @@ export class ERC20Wrapper {
     private _contractInterface: SmartContractInterface;
 
     public static async deploy(name_: string, symbol_: string, initialSupply_: QuantityLike, bytecode: BytesLike, options: TransactionSendingOptions): Promise<ERC20Wrapper> {
-        const deployed = await deploySmartContract(bytecode, CONTRACT_ABI, [name_, symbol_, initialSupply_], 0, options);
+        const deployed = await deploySmartContract(bytecode, ERC20_ABI, [name_, symbol_, initialSupply_], 0, options);
         if (deployed.receipt.status > BigInt(0)) {
             return new ERC20Wrapper(deployed.result, options);
         } else {
@@ -18,50 +18,50 @@ export class ERC20Wrapper {
     }
     
     public static getDeployTxBuildDetails(name_: string, symbol_: string, initialSupply_: QuantityLike, bytecode: BytesLike): TransactionBuildDetails {
-        return getTxBuildDetailsForDeploy(bytecode, CONTRACT_ABI, [name_, symbol_, initialSupply_], 0);
+        return getTxBuildDetailsForDeploy(bytecode, ERC20_ABI, [name_, symbol_, initialSupply_], 0);
     }
 
     constructor(address: AddressLike, rpcOptions: RPCOptions) {
-        this._contractInterface = new SmartContractInterface(address, CONTRACT_ABI, rpcOptions);
+        this._contractInterface = new SmartContractInterface(address, ERC20_ABI, rpcOptions);
         this.address = this._contractInterface.address;
     }
 
     public async name(options?: MethodCallingOptions): Promise<string> {
-        const result: any = await this._contractInterface.callViewMethod("name", [], options || {});
-        return result[0]
+        const __r: any = await this._contractInterface.callViewMethod("name", [], options || {});
+        return __r[0]
     }
 
     public async symbol(options?: MethodCallingOptions): Promise<string> {
-        const result: any = await this._contractInterface.callViewMethod("symbol", [], options || {});
-        return result[0]
+        const __r: any = await this._contractInterface.callViewMethod("symbol", [], options || {});
+        return __r[0]
     }
 
     public async decimals(options?: MethodCallingOptions): Promise<Quantity> {
-        const result: any = await this._contractInterface.callViewMethod("decimals", [], options || {});
-        return result[0]
+        const __r: any = await this._contractInterface.callViewMethod("decimals", [], options || {});
+        return __r[0]
     }
 
     public async totalSupply(options?: MethodCallingOptions): Promise<Quantity> {
-        const result: any = await this._contractInterface.callViewMethod("totalSupply", [], options || {});
-        return result[0]
+        const __r: any = await this._contractInterface.callViewMethod("totalSupply", [], options || {});
+        return __r[0]
     }
 
     public async balanceOf(account: AddressLike, options?: MethodCallingOptions): Promise<Quantity> {
-        const result: any = await this._contractInterface.callViewMethod("balanceOf", [account], options || {});
-        return result[0]
+        const __r: any = await this._contractInterface.callViewMethod("balanceOf", [account], options || {});
+        return __r[0]
     }
 
     public async allowance(owner: AddressLike, spender: AddressLike, options?: MethodCallingOptions): Promise<Quantity> {
-        const result: any = await this._contractInterface.callViewMethod("allowance", [owner, spender], options || {});
-        return result[0]
+        const __r: any = await this._contractInterface.callViewMethod("allowance", [owner, spender], options || {});
+        return __r[0]
     }
 
     public async transfer(to: AddressLike, amount: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<ERC20EventCollection>> {
-        const result = await this._contractInterface.callMutableMethod("transfer", [to, amount], options);
+        const __r = await this._contractInterface.callMutableMethod("transfer", [to, amount], options);
     
-        if (result.receipt.status > BigInt(0)) {
-            const decodedEvents = this._contractInterface.parseTransactionLogs(result.receipt.logs)
-            return { receipt: result.receipt, result: new ERC20EventCollection(decodedEvents) };
+        if (__r.receipt.status > BigInt(0)) {
+            const decodedEvents = this._contractInterface.parseTransactionLogs(__r.receipt.logs)
+            return { receipt: __r.receipt, result: new ERC20EventCollection(decodedEvents) };
         } else {
             throw new Error("Transaction reverted");
         }
@@ -72,11 +72,11 @@ export class ERC20Wrapper {
     }
 
     public async approve(spender: AddressLike, amount: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<ERC20EventCollection>> {
-        const result = await this._contractInterface.callMutableMethod("approve", [spender, amount], options);
+        const __r = await this._contractInterface.callMutableMethod("approve", [spender, amount], options);
     
-        if (result.receipt.status > BigInt(0)) {
-            const decodedEvents = this._contractInterface.parseTransactionLogs(result.receipt.logs)
-            return { receipt: result.receipt, result: new ERC20EventCollection(decodedEvents) };
+        if (__r.receipt.status > BigInt(0)) {
+            const decodedEvents = this._contractInterface.parseTransactionLogs(__r.receipt.logs)
+            return { receipt: __r.receipt, result: new ERC20EventCollection(decodedEvents) };
         } else {
             throw new Error("Transaction reverted");
         }
@@ -87,11 +87,11 @@ export class ERC20Wrapper {
     }
 
     public async transferFrom(from: AddressLike, to: AddressLike, amount: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<ERC20EventCollection>> {
-        const result = await this._contractInterface.callMutableMethod("transferFrom", [from, to, amount], options);
+        const __r = await this._contractInterface.callMutableMethod("transferFrom", [from, to, amount], options);
     
-        if (result.receipt.status > BigInt(0)) {
-            const decodedEvents = this._contractInterface.parseTransactionLogs(result.receipt.logs)
-            return { receipt: result.receipt, result: new ERC20EventCollection(decodedEvents) };
+        if (__r.receipt.status > BigInt(0)) {
+            const decodedEvents = this._contractInterface.parseTransactionLogs(__r.receipt.logs)
+            return { receipt: __r.receipt, result: new ERC20EventCollection(decodedEvents) };
         } else {
             throw new Error("Transaction reverted");
         }
@@ -102,11 +102,11 @@ export class ERC20Wrapper {
     }
 
     public async increaseAllowance(spender: AddressLike, addedValue: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<ERC20EventCollection>> {
-        const result = await this._contractInterface.callMutableMethod("increaseAllowance", [spender, addedValue], options);
+        const __r = await this._contractInterface.callMutableMethod("increaseAllowance", [spender, addedValue], options);
     
-        if (result.receipt.status > BigInt(0)) {
-            const decodedEvents = this._contractInterface.parseTransactionLogs(result.receipt.logs)
-            return { receipt: result.receipt, result: new ERC20EventCollection(decodedEvents) };
+        if (__r.receipt.status > BigInt(0)) {
+            const decodedEvents = this._contractInterface.parseTransactionLogs(__r.receipt.logs)
+            return { receipt: __r.receipt, result: new ERC20EventCollection(decodedEvents) };
         } else {
             throw new Error("Transaction reverted");
         }
@@ -117,11 +117,11 @@ export class ERC20Wrapper {
     }
 
     public async decreaseAllowance(spender: AddressLike, subtractedValue: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<ERC20EventCollection>> {
-        const result = await this._contractInterface.callMutableMethod("decreaseAllowance", [spender, subtractedValue], options);
+        const __r = await this._contractInterface.callMutableMethod("decreaseAllowance", [spender, subtractedValue], options);
     
-        if (result.receipt.status > BigInt(0)) {
-            const decodedEvents = this._contractInterface.parseTransactionLogs(result.receipt.logs)
-            return { receipt: result.receipt, result: new ERC20EventCollection(decodedEvents) };
+        if (__r.receipt.status > BigInt(0)) {
+            const decodedEvents = this._contractInterface.parseTransactionLogs(__r.receipt.logs)
+            return { receipt: __r.receipt, result: new ERC20EventCollection(decodedEvents) };
         } else {
             throw new Error("Transaction reverted");
         }
@@ -158,25 +158,25 @@ export class ERC20EventCollection {
     }
 
     public getTransferEvent(index: number): SmartContractEventWrapper<TransferEvent> {
-        const result: any = this.events[index].parameters;
+        const __r: any = this.events[index].parameters;
         return {
             event: this.events[index],
             data: {
-                from: result[0],
-                to: result[1],
-                value: result[2],
+                from: __r[0],
+                to: __r[1],
+                value: __r[2],
             },
         };
     }
 
     public getApprovalEvent(index: number): SmartContractEventWrapper<ApprovalEvent> {
-        const result: any = this.events[index].parameters;
+        const __r: any = this.events[index].parameters;
         return {
             event: this.events[index],
             data: {
-                owner: result[0],
-                spender: result[1],
-                value: result[2],
+                owner: __r[0],
+                spender: __r[1],
+                value: __r[2],
             },
         };
     }
@@ -194,7 +194,7 @@ export interface ApprovalEvent {
     value: Quantity,
 }
 
-const CONTRACT_ABI: ABILike = [
+export const ERC20_ABI: ABILike = [
     {
         "inputs": [
             {
