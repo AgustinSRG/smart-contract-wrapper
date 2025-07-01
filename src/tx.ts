@@ -15,6 +15,22 @@ const NonceCollisionErrorMessages = [
 ];
 
 /**
+ * Runs callback function
+ * @param fn The callback function
+ */
+async function runCallbackFunction(fn?: () => void | Promise<void>): Promise<void> {
+    if (!fn) {
+        return;
+    }
+
+    const r = fn();
+
+    if (r instanceof Promise) {
+        await r;
+    }
+}
+
+/**
  * Details for building a transaction
  */
 export interface TransactionBuildDetails {
@@ -62,6 +78,8 @@ export function sendTransaction(toOrDetails: AddressLike | null | TransactionBui
 }
 
 async function sendTransactionInternal(to: AddressLike | null, data: BytesLike, value: QuantityLike, options: TransactionSendingOptions) {
+    await runCallbackFunction(options.beforeSend);
+
     let receipt: TransactionReceipt;
     while (!receipt) {
         try {
@@ -164,7 +182,6 @@ async function sendFeeMarketTransaction(to: AddressLike, data: BytesLike, value:
         nonceHex = toHex(options.nonce);
         nonce = BigInt(nonceHex);
     }
-
 
     // Build transaction
 
@@ -318,11 +335,14 @@ async function sendSerializedTransaction(serializedTx: BytesLike, accountAddress
     }
     const txHash = await Web3RPCClient.getInstance().sendRawTransaction(serializedTx, options);
 
+    await runCallbackFunction(options.afterSend);
+
     // Wait for the transaction receipt
     if (options.logFunction) {
         options.logFunction(`Transaction hash: ${toHex(txHash)}`);
         options.logFunction(`Waiting for transaction to be mined...`);
     }
+
     const startTime = Date.now();
     let receipt: TransactionReceipt;
     let nonceChanged = false;
