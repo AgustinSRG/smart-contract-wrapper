@@ -324,6 +324,16 @@ export interface MethodTransactionOptions {
      * Log Function to receive progress messages
      */
     logFunction?: (msg: string) => void;
+
+    /**
+     * Function called before sending the transaction
+     */
+    beforeSend?: () => void | Promise<void>;
+
+    /**
+     * Function called after sending the transaction, before waiting for receipt
+     */
+    afterSend?: () => void | Promise<void>;
 }
 
 /**
