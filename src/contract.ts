@@ -81,7 +81,18 @@ export class SmartContractInterface {
      */
     constructor(address: AddressLike, abi: ABILike, rpcOptions: RPCOptions) {
         this.address = parseAddress(address);
-        this.rpcOptions = rpcOptions;
+        if ("provider" in rpcOptions) {
+            this.rpcOptions = {
+                provider: rpcOptions.provider,
+                timeout: rpcOptions.timeout,
+            };
+        } else {
+            this.rpcOptions = {
+                rpcURL: rpcOptions.rpcURL,
+                timeout: rpcOptions.timeout,
+            };
+        }
+
         this.abi = abi;
         this.contractInterface = new Interface(abi);
     }
@@ -116,7 +127,7 @@ export class SmartContractInterface {
      */
     public async callMutableMethod(method: string | FunctionFragment, params: InputABIParams, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
         const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
-        const receipt = await sendTransaction(this.address, txDataHexString, 0, { ...options, ...this.rpcOptions });
+        const receipt = await sendTransaction(this.address, txDataHexString, 0, { ...this.rpcOptions, ...options });
         return {
             receipt: receipt,
             result: null,
@@ -149,7 +160,7 @@ export class SmartContractInterface {
      */
     public async callPayableMethod(method: string | FunctionFragment, params: InputABIParams, value: QuantityLike, options: MethodTransactionOptions): Promise<TransactionResult<void>> {
         const txDataHexString = this.contractInterface.encodeFunctionData(method, params);
-        const receipt = await sendTransaction(this.address, txDataHexString, value, { ...options, ...this.rpcOptions });
+        const receipt = await sendTransaction(this.address, txDataHexString, value, { ...this.rpcOptions, ...options });
         return {
             receipt: receipt,
             result: null,
