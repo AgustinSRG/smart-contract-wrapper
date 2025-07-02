@@ -7,7 +7,7 @@ import { normalizeABIResult, parseAddress, parseBytes } from "./utils";
 import { FunctionFragment, Interface } from "@asanrom/ethers-abi";
 import { TransactionBuildDetails, sendTransaction } from "./tx";
 import { interpretLog } from "./events";
-import { ABILike, Address, AddressLike, BlockTag, BytesLike, InputABIParams, MethodCallingOptions, MethodTransactionOptions, OutputABIParams, QuantityLike, RPCOptions, SmartContractEvent, TransactionLog, TransactionReceipt, TransactionResult, TransactionSendingOptions } from "./types";
+import { ABILike, Address, AddressLike, BlockTag, BytesLike, InputABIParams, MethodCallingOptions, MethodTransactionOptions, OutputABIParams, QuantityLike, RPCOptions, RPCOptionsWithProvider, RPCOptionsWithURL, SmartContractEvent, TransactionLog, TransactionReceipt, TransactionResult, TransactionSendingOptions } from "./types";
 
 /**
  * Deploys smart contract
@@ -81,7 +81,11 @@ export class SmartContractInterface {
      */
     constructor(address: AddressLike, abi: ABILike, rpcOptions: RPCOptions) {
         this.address = parseAddress(address);
-        this.rpcOptions = rpcOptions;
+        this.rpcOptions = {
+            provider: (rpcOptions as RPCOptionsWithProvider).provider,
+            rpcURL: (rpcOptions as RPCOptionsWithURL).rpcURL,
+            timeout: rpcOptions.timeout,
+        };
         this.abi = abi;
         this.contractInterface = new Interface(abi);
     }
