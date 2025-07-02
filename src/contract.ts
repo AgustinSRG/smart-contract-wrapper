@@ -81,18 +81,7 @@ export class SmartContractInterface {
      */
     constructor(address: AddressLike, abi: ABILike, rpcOptions: RPCOptions) {
         this.address = parseAddress(address);
-        if ("provider" in rpcOptions) {
-            this.rpcOptions = {
-                provider: rpcOptions.provider,
-                timeout: rpcOptions.timeout,
-            };
-        } else {
-            this.rpcOptions = {
-                rpcURL: rpcOptions.rpcURL,
-                timeout: rpcOptions.timeout,
-            };
-        }
-
+        this.rpcOptions = rpcOptions;
         this.abi = abi;
         this.contractInterface = new Interface(abi);
     }
