@@ -92,7 +92,7 @@ async function sendTransactionInternal(to: AddressLike | null, data: BytesLike, 
             if (options.nonce !== undefined) {
                 throw ex;
             }
-            const errMessageLower = (ex.message + "").toLowerCase();
+            const errMessageLower = ((ex.message + "").split("\n")[0] + "").toLowerCase();
             let isNonceError = false;
             for (const errMsg of NonceCollisionErrorMessages) {
                 if (errMessageLower.includes(errMsg)) {
@@ -105,7 +105,7 @@ async function sendTransactionInternal(to: AddressLike | null, data: BytesLike, 
                     options.logFunction(`Transaction nonce collision detected. Retrying the transaction with a new nonce.`);
                 }
             } else {
-                throw ex;
+                throw new Error("Error sending transaction: " + ex.message);
             }
         }
     }

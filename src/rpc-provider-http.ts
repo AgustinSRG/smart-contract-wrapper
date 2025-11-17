@@ -84,20 +84,28 @@ export class RPC_HTTP_Provider implements RPCProvider {
             const responseHandler = function (response: HTTP.IncomingMessage) {
                 let body = "";
 
-                if (response.statusCode !== 200) {
-                    return reject(new Error("JSON RPC status code: " + response.statusCode));
-                }
-
                 response.on("data", function (chunk) {
                     body += chunk;
                 });
 
                 response.on("end", function () {
+                    if (response.statusCode !== 200) {
+                        return reject(new Error("JSON RPC status code: " + response.statusCode + ".\nResponse: " + body + "\nContext: " + JSON.stringify({
+                            url: this.url,
+                            method,
+                            params,
+                        })));
+                    }
+
                     try {
                         const parsedBody = JSON.parse(body);
 
                         if (parsedBody.error) {
-                            return reject(new Error("Error code " + parsedBody.error.code + " / " + parsedBody.error.message));
+                            return reject(new Error("[" + method + "] RPC Error " + parsedBody.error.code + " / " + parsedBody.error.message + "\nContext: " + JSON.stringify({
+                                url: this.url,
+                                method,
+                                params,
+                            })));
                         }
 
                         resolve(parsedBody.result);
@@ -108,7 +116,7 @@ export class RPC_HTTP_Provider implements RPCProvider {
             };
 
             if (this.tls) {
-                request = HTTPS.request(this.url,{
+                request = HTTPS.request(this.url, {
                     agent: this.agentTLS,
                     method: "POST",
                     headers: {
@@ -117,7 +125,7 @@ export class RPC_HTTP_Provider implements RPCProvider {
                     timeout: timeout || 0,
                 }, responseHandler);
             } else {
-                request = HTTP.request(this.url,{
+                request = HTTP.request(this.url, {
                     agent: this.agent,
                     method: "POST",
                     headers: {

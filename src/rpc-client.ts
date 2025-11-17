@@ -51,13 +51,21 @@ export class Web3RPCClient {
                     return reject(err);
                 }
                 if (res.statusCode !== 200) {
-                    return reject(new Error("JSON RPC status code: " + res.statusCode));
+                    return reject(new Error("JSON RPC status code: " + res.statusCode + ".\nResponse: " + body + "\nContext: " + JSON.stringify({
+                        url: options.rpcURL,
+                        method,
+                        params,
+                    })));
                 }
                 try {
                     const parsedBody = JSON.parse(body);
 
                     if (parsedBody.error) {
-                        return reject(new Error("Error code " + parsedBody.error.code + " / " + parsedBody.error.message));
+                        return reject(new Error("[" + method + "] RPC Error " + parsedBody.error.code + " / " + parsedBody.error.message + "\nContext: " + JSON.stringify({
+                            url: options.rpcURL,
+                            method,
+                            params,
+                        })));
                     }
 
                     resolve(parsedBody.result);
