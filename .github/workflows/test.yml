@@ -12,19 +12,19 @@ jobs:
 
     strategy:
       matrix:
-        node-version: ['20.x']
+        node-version: ['22.x', '24.x']
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v6
     - name: Set up Ethereum test node
-      uses: AgustinSRG/eth-test-node-action@v5
+      uses: AgustinSRG/eth-test-node-action@v6
       with:
         rpcPort: 8545
         gethVersion: alltools-latest
         websocket: 'ON'
         websocketPort: 8546
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v6
       with:
         node-version: ${{ matrix.node-version }}
    
